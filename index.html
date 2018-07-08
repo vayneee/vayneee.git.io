@@ -330,7 +330,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  367
+                  396
                 </span>
               
 
@@ -369,15 +369,16 @@
       
         
           
-            <h4 id="什么是block？"><a href="#什么是block？" class="headerlink" title="什么是block？"></a>什么是block？</h4><p>block是C语言的扩充功能，可以用一句话来表示block的扩充功能：带有自动变量（局部变量）的匿名函数。</p>
-<h4 id="block语法"><a href="#block语法" class="headerlink" title="block语法"></a>block语法</h4><p><img src="/2018/07/08/block/biaodashi.png">&gt;</p>
+            <h3 id="什么是block"><a href="#什么是block" class="headerlink" title="什么是block"></a>什么是block</h3><p>block是C语言的扩充功能，可以用一句话来表示block的扩充功能：带有自动变量（局部变量）的匿名函数。</p>
+<h3 id="block语法"><a href="#block语法" class="headerlink" title="block语法"></a>block语法</h3><p><img src="/2018/07/08/block/biaodashi.png">&gt;</p>
 <p>上图为block的语法。其中返回值类型和参数列表可以省略掉。我们来定义一个最简单，无参屋返回值的block</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">void (^block)(void) = ^&#123;</span><br><span class="line"> 	  NSLog(@&quot;Hello, World!&quot;);</span><br><span class="line"> &#125;;</span><br><span class="line"> block();	//执行</span><br></pre></td></tr></table></figure>
-<h4 id="block本质"><a href="#block本质" class="headerlink" title="block本质"></a>block本质</h4><p>Block语法看上去好像很特别，但它实际上是作为极普通的C语言代码来处理的。通过支持Block的编译器，含有Block语法的源代码转换成C语言编译器能处理的源代码，并作为C语言源代码被编译。</p>
+<h3 id="block的本质"><a href="#block的本质" class="headerlink" title="block的本质"></a>block的本质</h3><p>Block语法看上去好像很特别，但它实际上是作为极普通的C语言代码来处理的。通过支持Block的编译器，含有Block语法的源代码转换成C语言编译器能处理的源代码，并作为C语言源代码被编译。</p>
 <p>我们可以通过clang查看编译后的代码来探寻一下block的实现。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc main.m</span><br></pre></td></tr></table></figure>
-<p>上边的block代码通过clang可变换为一下形式：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">struct __block_impl &#123;</span><br><span class="line">  void *isa;</span><br><span class="line">  int Flags;</span><br><span class="line">  int Reserved;</span><br><span class="line">  void *FuncPtr;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct __main_block_impl_0 &#123;</span><br><span class="line">  struct __block_impl impl;</span><br><span class="line">  struct __main_block_desc_0* Desc;</span><br><span class="line">    </span><br><span class="line">  __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int flags=0) &#123;</span><br><span class="line">    impl.isa = &amp;_NSConcreteStackBlock;</span><br><span class="line">    impl.Flags = flags;</span><br><span class="line">    impl.FuncPtr = fp;</span><br><span class="line">    Desc = desc;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">static void __main_block_func_0(struct __main_block_impl_0 *__cself) &#123;</span><br><span class="line"></span><br><span class="line">            NSLog((NSString *)&amp;__NSConstantStringImpl__var_folders_bq_zhpjzhyx45gdrxslt2r6scpw0000gn_T_main_d3609c_mi_0);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static struct __main_block_desc_0 &#123;</span><br><span class="line">  size_t reserved;</span><br><span class="line">  size_t Block_size;</span><br><span class="line">&#125; __main_block_desc_0_DATA = &#123; 0, sizeof(struct __main_block_impl_0)&#125;;</span><br><span class="line"></span><br><span class="line">int main(int argc, const char * argv[]) &#123;</span><br><span class="line">    /* @autoreleasepool */ &#123; __AtAutoreleasePool __autoreleasepool; </span><br><span class="line">        //定义block</span><br><span class="line">        void (*block)(void) = ((void (*)())&amp;__main_block_impl_0((void *)__main_block_func_0, &amp;__main_block_desc_0_DATA));</span><br><span class="line">                            </span><br><span class="line">        //执行block内部的代码</span><br><span class="line">        ((void (*)(__block_impl *))((__block_impl *)block)-&gt;FuncPtr)((__block_impl *)block);</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上边的block代码通过clang可变换为以下形式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">struct __block_impl &#123;</span><br><span class="line">  void *isa;</span><br><span class="line">  int Flags;</span><br><span class="line">  int Reserved;</span><br><span class="line">  void *FuncPtr;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct __main_block_impl_0 &#123;</span><br><span class="line">  struct __block_impl impl;</span><br><span class="line">  struct __main_block_desc_0* Desc;</span><br><span class="line">  //构造函数</span><br><span class="line">  __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int flags=0) &#123;</span><br><span class="line">    impl.isa = &amp;_NSConcreteStackBlock;  //block类型</span><br><span class="line">    impl.Flags = flags;</span><br><span class="line">    impl.FuncPtr = fp;                  </span><br><span class="line">    Desc = desc;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">//封装了block执行逻辑的函数</span><br><span class="line">static void __main_block_func_0(struct __main_block_impl_0 *__cself) &#123;</span><br><span class="line"></span><br><span class="line">            NSLog((NSString *)&amp;__NSConstantStringImpl__var_folders_bq_zhpjzhyx45gdrxslt2r6scpw0000gn_T_main_d3609c_mi_0);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static struct __main_block_desc_0 &#123;</span><br><span class="line">  size_t reserved;</span><br><span class="line">  size_t Block_size;</span><br><span class="line">&#125; __main_block_desc_0_DATA = &#123; 0, sizeof(struct __main_block_impl_0)&#125;;</span><br><span class="line"></span><br><span class="line">int main(int argc, const char * argv[]) &#123;</span><br><span class="line">    /* @autoreleasepool */ &#123; __AtAutoreleasePool __autoreleasepool; </span><br><span class="line">        //定义block</span><br><span class="line">        void (*block)(void) = ((void (*)())&amp;__main_block_impl_0((void *)__main_block_func_0, &amp;__main_block_desc_0_DATA));</span><br><span class="line">                            </span><br><span class="line">        //执行block内部的代码</span><br><span class="line">        ((void (*)(__block_impl *))((__block_impl *)block)-&gt;FuncPtr)((__block_impl *)block);</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>简单整理一下结构如下：</p>
 
           
         
@@ -515,7 +516,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  263
+                  303
                 </span>
               
 
@@ -561,7 +562,8 @@
 <h4 id="7-2-第二天，3km慢跑"><a href="#7-2-第二天，3km慢跑" class="headerlink" title="7-2 第二天，3km慢跑"></a>7-2 第二天，3km慢跑</h4><p><img src="/2018/07/01/reduceWeight/7-2.jpeg" width="200px"></p>
 <h4 id="7-3-第三天，玩了一次-燃脂跑·帮巴扎黑减肥-，时长22分钟。"><a href="#7-3-第三天，玩了一次-燃脂跑·帮巴扎黑减肥-，时长22分钟。" class="headerlink" title="7-3 第三天，玩了一次[燃脂跑·帮巴扎黑减肥]，时长22分钟。"></a>7-3 第三天，玩了一次[燃脂跑·帮巴扎黑减肥]，时长22分钟。</h4><p>一个趣味课程，我扮演一个遛狗官，在霸气喵的指导下，一边跑步一边完成遛胖狗的任务。整体下来不觉得累，不知道不觉就过去了。但是感觉要比不间断的3km出汗要多。还是挺有趣的。</p>
 <p><img src="/2018/07/01/reduceWeight/7-3.jpeg" width="200px"></p>
-<h4 id="7-4-第四天，今天休息。三练一休"><a href="#7-4-第四天，今天休息。三练一休" class="headerlink" title="7-4 第四天，今天休息。三练一休"></a>7-4 第四天，今天休息。三练一休</h4>
+<h4 id="7-4-第四天，今天休息。三练一休"><a href="#7-4-第四天，今天休息。三练一休" class="headerlink" title="7-4 第四天，今天休息。三练一休"></a>7-4 第四天，今天休息。三练一休</h4><h4 id="7-5-第五天，下雨"><a href="#7-5-第五天，下雨" class="headerlink" title="7-5 第五天，下雨"></a>7-5 第五天，下雨</h4><h4 id="7-6-第六天，下雨"><a href="#7-6-第六天，下雨" class="headerlink" title="7-6 第六天，下雨"></a>7-6 第六天，下雨</h4><h4 id="7-7-第七天，还是下雨"><a href="#7-7-第七天，还是下雨" class="headerlink" title="7-7 第七天，还是下雨"></a>7-7 第七天，还是下雨</h4><h4 id="7-8-第八天-终于不下雨了，地面也没积水"><a href="#7-8-第八天-终于不下雨了，地面也没积水" class="headerlink" title="7-8 第八天 终于不下雨了，地面也没积水"></a>7-8 第八天 终于不下雨了，地面也没积水</h4><p><img src="/2018/07/01/reduceWeight/7-8.jpeg" width="200px"></p>
+
           
         
       
@@ -714,7 +716,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">630</span>
+    <span title="Site words total count">699</span>
   
 </div>
 
