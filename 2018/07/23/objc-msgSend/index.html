@@ -75,19 +75,17 @@
 
 
 
-<meta name="description" content="什么是blockblock是C语言的扩充功能，可以用一句话来表示block的扩充功能：带有自动变量（局部变量）的匿名函数。 block语法&amp;gt; 上图为block的语法。其中返回值类型和参数列表可以省略掉。我们来定义一个最简单，无参屋返回值的block 1234void (^block)(void) = ^&amp;#123; 	  NSLog(@&amp;quot;Hello, World!&amp;quot;);">
+<meta name="description" content="OC方法的调用，在运行时都会转成objc_msgSend()方法">
 <meta property="og:type" content="article">
-<meta property="og:title" content="block">
-<meta property="og:url" content="http://yoursite.com/2018/07/08/block/index.html">
+<meta property="og:title" content="objc_msgSend">
+<meta property="og:url" content="http://yoursite.com/2018/07/23/objc-msgSend/index.html">
 <meta property="og:site_name" content="vayneee">
-<meta property="og:description" content="什么是blockblock是C语言的扩充功能，可以用一句话来表示block的扩充功能：带有自动变量（局部变量）的匿名函数。 block语法&amp;gt; 上图为block的语法。其中返回值类型和参数列表可以省略掉。我们来定义一个最简单，无参屋返回值的block 1234void (^block)(void) = ^&amp;#123; 	  NSLog(@&amp;quot;Hello, World!&amp;quot;);">
+<meta property="og:description" content="OC方法的调用，在运行时都会转成objc_msgSend()方法">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/07/08/block/biaodashi.png">
-<meta property="og:updated_time" content="2018-07-08T02:54:21.986Z">
+<meta property="og:updated_time" content="2018-07-23T15:58:15.891Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="block">
-<meta name="twitter:description" content="什么是blockblock是C语言的扩充功能，可以用一句话来表示block的扩充功能：带有自动变量（局部变量）的匿名函数。 block语法&amp;gt; 上图为block的语法。其中返回值类型和参数列表可以省略掉。我们来定义一个最简单，无参屋返回值的block 1234void (^block)(void) = ^&amp;#123; 	  NSLog(@&amp;quot;Hello, World!&amp;quot;);">
-<meta name="twitter:image" content="http://yoursite.com/2018/07/08/block/biaodashi.png">
+<meta name="twitter:title" content="objc_msgSend">
+<meta name="twitter:description" content="OC方法的调用，在运行时都会转成objc_msgSend()方法">
 
 
 
@@ -117,13 +115,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/07/08/block/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/07/23/objc-msgSend/"/>
 
 
 
 
 
-  <title>block | vayneee</title>
+  <title>objc_msgSend | vayneee</title>
   
 
 
@@ -250,7 +248,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/08/block/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/23/objc-msgSend/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="vayneee">
@@ -267,7 +265,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">block</h1>
+          <h1 class="post-title" itemprop="name headline">objc_msgSend</h1>
         
 
         <div class="post-meta">
@@ -279,8 +277,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-08T10:00:20+08:00">
-                2018-07-08
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-23T20:48:49+08:00">
+                2018-07-23
               </time>
             
 
@@ -289,28 +287,6 @@
             
           </span>
 
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/objc/" itemprop="url" rel="index">
-                    <span itemprop="name">Objective-C</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -333,7 +309,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  396
+                  17
                 </span>
               
 
@@ -349,7 +325,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  2
+                  1
                 </span>
               
             </div>
@@ -370,16 +346,7 @@
       
 
       
-        <h3 id="什么是block"><a href="#什么是block" class="headerlink" title="什么是block"></a>什么是block</h3><p>block是C语言的扩充功能，可以用一句话来表示block的扩充功能：带有自动变量（局部变量）的匿名函数。</p>
-<h3 id="block语法"><a href="#block语法" class="headerlink" title="block语法"></a>block语法</h3><p><img src="/2018/07/08/block/biaodashi.png">&gt;</p>
-<p>上图为block的语法。其中返回值类型和参数列表可以省略掉。我们来定义一个最简单，无参屋返回值的block</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">void (^block)(void) = ^&#123;</span><br><span class="line"> 	  NSLog(@&quot;Hello, World!&quot;);</span><br><span class="line"> &#125;;</span><br><span class="line"> block();	//执行</span><br></pre></td></tr></table></figure>
-<h3 id="block的本质"><a href="#block的本质" class="headerlink" title="block的本质"></a>block的本质</h3><p>Block语法看上去好像很特别，但它实际上是作为极普通的C语言代码来处理的。通过支持Block的编译器，含有Block语法的源代码转换成C语言编译器能处理的源代码，并作为C语言源代码被编译。</p>
-<p>我们可以通过clang查看编译后的代码来探寻一下block的实现。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc main.m</span><br></pre></td></tr></table></figure>
-<p>上边的block代码通过clang可变换为以下形式：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">struct __block_impl &#123;</span><br><span class="line">  void *isa;</span><br><span class="line">  int Flags;</span><br><span class="line">  int Reserved;</span><br><span class="line">  void *FuncPtr;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct __main_block_impl_0 &#123;</span><br><span class="line">  struct __block_impl impl;</span><br><span class="line">  struct __main_block_desc_0* Desc;</span><br><span class="line">  //构造函数</span><br><span class="line">  __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int flags=0) &#123;</span><br><span class="line">    impl.isa = &amp;_NSConcreteStackBlock;  //block类型</span><br><span class="line">    impl.Flags = flags;</span><br><span class="line">    impl.FuncPtr = fp;                  </span><br><span class="line">    Desc = desc;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">//封装了block执行逻辑的函数</span><br><span class="line">static void __main_block_func_0(struct __main_block_impl_0 *__cself) &#123;</span><br><span class="line"></span><br><span class="line">            NSLog((NSString *)&amp;__NSConstantStringImpl__var_folders_bq_zhpjzhyx45gdrxslt2r6scpw0000gn_T_main_d3609c_mi_0);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static struct __main_block_desc_0 &#123;</span><br><span class="line">  size_t reserved;</span><br><span class="line">  size_t Block_size;</span><br><span class="line">&#125; __main_block_desc_0_DATA = &#123; 0, sizeof(struct __main_block_impl_0)&#125;;</span><br><span class="line"></span><br><span class="line">int main(int argc, const char * argv[]) &#123;</span><br><span class="line">    /* @autoreleasepool */ &#123; __AtAutoreleasePool __autoreleasepool; </span><br><span class="line">        //定义block</span><br><span class="line">        void (*block)(void) = ((void (*)())&amp;__main_block_impl_0((void *)__main_block_func_0, &amp;__main_block_desc_0_DATA));</span><br><span class="line">                            </span><br><span class="line">        //执行block内部的代码</span><br><span class="line">        ((void (*)(__block_impl *))((__block_impl *)block)-&gt;FuncPtr)((__block_impl *)block);</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>简单整理一下结构如下：</p>
+        <p>OC方法的调用，在运行时都会转成objc_msgSend()方法</p>
 
       
     </div>
@@ -404,8 +371,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/07/01/reduceWeight/" rel="next" title="减肥！减肥！减肥！">
-                <i class="fa fa-chevron-left"></i> 减肥！减肥！减肥！
+              <a href="/2018/07/19/runtime-Class/" rel="next" title="runtime_class">
+                <i class="fa fa-chevron-left"></i> runtime_class
               </a>
             
           </div>
@@ -413,10 +380,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/07/19/runtime-Class/" rel="prev" title="runtime_class">
-                runtime_class <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -479,17 +442,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -544,22 +498,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是block"><span class="nav-number">1.</span> <span class="nav-text">什么是block</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#block语法"><span class="nav-number">2.</span> <span class="nav-text">block语法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#block的本质"><span class="nav-number">3.</span> <span class="nav-text">block的本质</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
