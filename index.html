@@ -245,6 +245,410 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/22/kvo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="vayneee">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="vayneee">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/22/kvo/" itemprop="url">KVO实现原理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-22T23:22:59+08:00">
+                2018-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/objc/" itemprop="url" rel="index">
+                    <span itemprop="name">Objective-C</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  919
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  4
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="什么是KVO？"><a href="#什么是KVO？" class="headerlink" title="什么是KVO？"></a>什么是KVO？</h4><p>KVO 的全称是<code>Key-Value Observer</code>，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。它的具体步骤如下： 1) 注册观察者 2) 更改主题对象属性的值，即触发发送更改的通知。 3) 在制定的回调函数中，处理收到的更改通知。</p>
+<h4 id="本质分析"><a href="#本质分析" class="headerlink" title="本质分析"></a>本质分析</h4><p>通过下列代码，当我们触摸屏幕时确实监听到了<code>person1</code> age的变化。</p>
+<p><img src="/2018/08/22/kvo/kvo1.png"></p>
+<p>非常神奇的是，<code>person1</code>和<code>person2</code>竟然指向不的类型不同。我们得出一个结论，当使用了KVO进行了键值观察后在Runtime期间会生成一个新的类型，被观察的对象会指向一个叫做<code>NSKVONotifying_xxx</code>的类型。</p>
+<h4 id="本质验证"><a href="#本质验证" class="headerlink" title="本质验证"></a>本质验证</h4><p>我自己生成了一个叫做<code>NSKVONotifying_Person</code>的类型，再次进行kvo时，发现不起作用。并且会打印出以下信息<code>KVO failed to allocate class pair for name NSKVONotifying_Person, automatic key-value observing will not work for this class</code></p>
+<p><img src="/2018/08/22/kvo/kvo2.png"></p>
+<p>通过上述方法，我们发现在添加KVO之前，<code>person1</code> 和 <code>person2</code>的<code>setter</code>方法地址一致，但是<code>person1</code>添加了KVO之后，setter方法地址发生了变化。 变成了一个<code>Foundation</code>框架中的一个叫做<code>_NSSetLongLongValueAndNotify</code>的方法。</p>
+<h4 id="内部调用流程"><a href="#内部调用流程" class="headerlink" title="内部调用流程"></a>内部调用流程</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)setAge:(<span class="built_in">NSInteger</span>)age &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"setAge:"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)willChangeValueForKey:(<span class="built_in">NSString</span> *)key &#123;</span><br><span class="line">    [<span class="keyword">super</span> willChangeValueForKey:key];</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"willChangeValueForKey"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)didChangeValueForKey:(<span class="built_in">NSString</span> *)key &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"didChangeValueForKey - begin"</span>);</span><br><span class="line">    [<span class="keyword">super</span> didChangeValueForKey:key];</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"didChangeValueForKey - end"</span>);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2018/08/22/kvo/kvo3.png"></p>
+<ul>
+<li><code>willChangeValueForKey</code></li>
+<li>原来setter实现</li>
+<li><code>didChangeValueForKey</code></li>
+<li><code>didChangeValueForKey</code> 内部会调用observe的<code>observeValueForKeyPath: ofObject: change: context:</code>方法</li>
+</ul>
+<p>但是如果使用<code>[self.person1 class]</code>方法的话会发现person1是<code>Person</code>。使用<code>object_getClass()</code>获取到的类型是<code>NSKVONotifying_Person</code>. 所以calss方法不见得会返回正真的类型。应该是在<code>NSKVONotifying_Person</code>里重写了class的方法，屏蔽了底层的实现。</p>
+<p>我们可以通过以下方法来查看一下，动态生成的类中所包含的方法</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)printMethodsOfClass:(Class)cls &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"class ----- : %@"</span>,object_getClass(cls));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    Method *methodList = class_copyMethodList(cls, &amp;count);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">        Method method = methodList[i];</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"%@"</span>,<span class="built_in">NSStringFromSelector</span>(method_getName(method)));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    free(methodList);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	[<span class="keyword">self</span> printMethodsOfClass:object_getClass(<span class="keyword">self</span>.person1)];</span><br><span class="line">    [<span class="keyword">self</span> printMethodsOfClass:object_getClass(<span class="keyword">self</span>.person2)];</span><br></pre></td></tr></table></figure>
+<p><img src="/Users/yangyiqi/Desktop/mySpace/blog/source/_posts/kvo/kvo4.png"></p>
+<p>从结果来看，动态生成的类确实重写了class的方法。</p>
+<h4 id="手动触发KVO"><a href="#手动触发KVO" class="headerlink" title="手动触发KVO"></a>手动触发KVO</h4><p>由上边的内容我们可以明确知道，只有作用在setter方法时，KVO才会被触发。</p>
+<p>当KVO作用于NSMutableArray时，KVO肯定不会触发。如果我们手动调用这些方法依然可以做到监听的效果。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//添加观察事件</span></span><br><span class="line">[person addObserver:<span class="keyword">self</span> forKeyPath:<span class="string">@"dogs"</span> options:<span class="built_in">NSKeyValueObservingOptionOld</span>|<span class="built_in">NSKeyValueObservingOptionNew</span> context:<span class="literal">nil</span>];</span><br><span class="line"><span class="comment">//需要手动调用</span></span><br><span class="line">[person willChangeValueForKey:<span class="string">@"dogs"</span>];</span><br><span class="line"></span><br><span class="line">[person.dogs addObject:dog];</span><br><span class="line"><span class="comment">//需要手动调用</span></span><br><span class="line">[person didChangeValueForKey:<span class="string">@"dogs"</span>];</span><br></pre></td></tr></table></figure>
+<p>如果使用KVC来给age赋值的话，是否会触发KVO。答案是YES。</p>
+<h4 id="KVC的原理"><a href="#KVC的原理" class="headerlink" title="KVC的原理"></a>KVC的原理</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">Person</span> : <span class="title">NSObject</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> age;</span><br><span class="line">    <span class="keyword">int</span> _age;</span><br><span class="line">    <span class="keyword">int</span> isAge;</span><br><span class="line">    <span class="keyword">int</span> _isAge;  </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#import <span class="meta-string">"Person.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">Person</span></span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">//- (void)_setAge:(NSInteger)age &#123;</span></span><br><span class="line"><span class="comment">//    NSLog(@"_setAge:");</span></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line"><span class="comment">//- (void)setAge:(NSInteger)age &#123;</span></span><br><span class="line"><span class="comment">//    NSLog(@"setAge:");</span></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//+ (BOOL)accessInstanceVariablesDirectly &#123;</span></span><br><span class="line">  <span class="comment">//  return YES;</span></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+<p>由于property会自动生成setter方法。所以我实验了一下成员变量。如果写了setter方法，会优先调用setAge:</p>
+<p>如果setAge:不存在择会调用_setAge:。就算两个方法都不写。还是能成功触发KVO。成员变量的查找顺序为  _age, _isAge, age, isAge。</p>
+<p><code>setValue:forKey:</code>的调用流程</p>
+<p><img src="/2018/08/22/kvo/setter.png"></p>
+<p><code>valueForKey</code>调用流程</p>
+<p><img src="/2018/08/22/kvo/getter.png"></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+
+   <div>
+      
+   </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/21/timer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="vayneee">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="vayneee">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/21/timer/" itemprop="url">定时器</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-21T15:20:42+08:00">
+                2018-08-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/objc/" itemprop="url" rel="index">
+                    <span itemprop="name">Objective-C</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1,122
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  5
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>在我们日常开发中，定时器是我们比较常用的。但是定时器会有一定的内存问题。比如下边的代码，分别用CADisplayLink和NSTimer来执行任务，</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)viewDidLoad &#123;</span><br><span class="line">    [<span class="keyword">super</span> viewDidLoad];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">self</span>.link = [<span class="built_in">CADisplayLink</span> displayLinkWithTarget:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(linkTest)];</span><br><span class="line">    [<span class="keyword">self</span>.link addToRunLoop:[<span class="built_in">NSRunLoop</span> mainRunLoop] forMode:<span class="built_in">NSDefaultRunLoopMode</span>];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">self</span>.timer = [<span class="built_in">NSTimer</span> scheduledTimerWithTimeInterval:<span class="number">1.0</span>f target:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(timerTest) userInfo:<span class="literal">nil</span> repeats:<span class="literal">YES</span>];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)timerTest &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)linkTest &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)dealloc &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line"></span><br><span class="line">    [<span class="keyword">self</span>.timer invalidate];</span><br><span class="line">    [<span class="keyword">self</span>.link invalidate];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种情况下的dealloc方法并不会执行，就算退出了当前控制器，timer依然在执行任务。</p>
+<p>分析原因：因为self强引用了link和timer，link和timer又强引用了self。由于循环引用的问题所以导致了定时器不能释放。</p>
+<h4 id="解决办法一："><a href="#解决办法一：" class="headerlink" title="解决办法一："></a>解决办法一：</h4><p>我们可以使用带block的方法使用weakself来解决上述问题。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">__<span class="keyword">weak</span> <span class="keyword">typeof</span>(<span class="keyword">self</span>) weakSelf = <span class="keyword">self</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">self</span>.timer = [<span class="built_in">NSTimer</span> scheduledTimerWithTimeInterval:<span class="number">1.0</span>f repeats:<span class="literal">YES</span> block:^(<span class="built_in">NSTimer</span> * _Nonnull timer) &#123;</span><br><span class="line">      [weakSelf timerTest];</span><br><span class="line">  &#125;];</span><br></pre></td></tr></table></figure>
+<h4 id="解决办法二："><a href="#解决办法二：" class="headerlink" title="解决办法二："></a>解决办法二：</h4><p>产生上述问题的原因就是因为循环引用的问题。所以我们可以设置一个中间对象来解决。</p>
+<p><img src="/2018/08/21/timer/weakTarget.png"></p>
+<p>创建一个中间类，它对<code>self</code>进行一个弱引用。这里我这个<code>proxy</code>继承了<code>NSObject</code>，由于<code>NSObject</code>并没有<code>self</code>的两个<code>test</code>方法，所以需要进行消息转发。 当然我们可以直接继承<code>NSProxy</code>类更好</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">YQProxy</span> : <span class="title">NSObject</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">@property</span>(<span class="keyword">nonatomic</span>, <span class="keyword">assign</span>) <span class="keyword">id</span> target;</span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">instancetype</span>)proxyWithTarget:(<span class="keyword">id</span>)target;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line">    </span><br><span class="line"><span class="meta">#import <span class="meta-string">"YQProxy.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">YQProxy</span></span></span><br><span class="line">+ (<span class="keyword">instancetype</span>)proxyWithTarget:(<span class="keyword">id</span>)target &#123;</span><br><span class="line">    YQProxy *proxy = [[YQProxy alloc] init];</span><br><span class="line">    proxy.target = target;</span><br><span class="line">    <span class="keyword">return</span> proxy;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">id</span>)forwardingTargetForSelector:(SEL)aSelector &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">self</span>.target;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+<p>之后我们这样调用，当退出控制器的时候，timer就能正常释放了。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">self</span>.link = [<span class="built_in">CADisplayLink</span> displayLinkWithTarget:[YQProxy proxyWithTarget:<span class="keyword">self</span>] selector:<span class="keyword">@selector</span>(linkTest)];</span><br><span class="line">[<span class="keyword">self</span>.link addToRunLoop:[<span class="built_in">NSRunLoop</span> mainRunLoop] forMode:<span class="built_in">NSDefaultRunLoopMode</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">self</span>.timer = [<span class="built_in">NSTimer</span> scheduledTimerWithTimeInterval:<span class="number">1.0</span>f target:[YQProxy proxyWithTarget:<span class="keyword">self</span>] selector:<span class="keyword">@selector</span>(timerTest) userInfo:<span class="literal">nil</span> repeats:<span class="literal">YES</span>];</span><br></pre></td></tr></table></figure>
+<p>由于<code>CADisplayLink</code>和<code>NSTimer</code>都是基于<code>NSRunLoop</code>的，可能会导致它不准时，主线程的 <code>RunLoop</code> 里有两个预置的 <code>Mode</code>：<code>kCFRunLoopDefaultMode</code> 和 <code>UITrackingRunLoopMode</code>。这两个 <code>Mode</code>都已经被标记为<code>Common</code>属性。<code>DefaultMode</code> 是 App 平时所处的状态，<code>TrackingRunLoopMode</code> 是追踪 ScrollView 滑动时的状态。当你创建一个 Timer 并加到 DefaultMode 时，Timer 会得到重复回调，但此时滑动一个TableView时，RunLoop 会将 mode 切换为 TrackingRunLoopMode，这时 Timer 就不会被回调，并且也不会影响到滑动操作。所以想要在scrollView滑动时候，timer继续工作，就需要将timer加入到这两个mode中或者<code>NSRunLoopCommonModes</code>中。</p>
+<p>关于<code>RunLoop</code>的知识可以看Y神的<a href="https://blog.ibireme.com/2015/05/18/runloop/" target="_blank" rel="noopener">深入理解RunLoop</a>。</p>
+<h4 id="GCD定时器"><a href="#GCD定时器" class="headerlink" title="GCD定时器"></a>GCD定时器</h4><p>GCD中也有自己的定时器，当然GCD的定时器不受RunLoop影响，比NSTimer更加准时。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, <span class="number">0</span>, <span class="number">0</span>, dispatch_get_main_queue());</span><br><span class="line"></span><br><span class="line">   dispatch_source_set_timer(<span class="keyword">self</span>.timer, DISPATCH_TIME_NOW, <span class="number">1</span> * <span class="built_in">NSEC_PER_SEC</span>, <span class="number">0</span> * <span class="built_in">NSEC_PER_SEC</span>);</span><br><span class="line"></span><br><span class="line">   dispatch_source_set_event_handler(<span class="keyword">self</span>.timer, ^&#123;</span><br><span class="line">       <span class="built_in">NSLog</span>(<span class="string">@"gcd timer"</span>);</span><br><span class="line">   &#125;);</span><br><span class="line"></span><br><span class="line">   dispatch_resume(<span class="keyword">self</span>.timer);</span><br><span class="line"></span><br><span class="line"><span class="keyword">self</span>.timer = timer;</span><br></pre></td></tr></table></figure>
+<p>我自己封装了一个GCD的定时器</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">YQTimer</span> : <span class="title">NSObject</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> GCD定时器</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> @param task 回调</span></span><br><span class="line"><span class="comment"> @param start 开始时间</span></span><br><span class="line"><span class="comment"> @param interval 时间间隔</span></span><br><span class="line"><span class="comment"> @param repeats 是否重复</span></span><br><span class="line"><span class="comment"> @param async 是否异步</span></span><br><span class="line"><span class="comment"> @return 返回一个定时器的名字</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">+ (<span class="built_in">NSString</span> *)execTask:(<span class="keyword">void</span>(^)(<span class="keyword">void</span>))task</span><br><span class="line">                 start:(<span class="built_in">NSTimeInterval</span>)start</span><br><span class="line">              interval:(<span class="built_in">NSTimeInterval</span>)interval</span><br><span class="line">               repeats:(<span class="built_in">BOOL</span>)repeats</span><br><span class="line">                 async:(<span class="built_in">BOOL</span>)async;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> 取消定时器</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> @param name 定时器的名字</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">+ (<span class="keyword">void</span>)cancelTask:(<span class="built_in">NSString</span> *)name;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"> </span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">YQTimer</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//用来存储定时器</span></span><br><span class="line"><span class="keyword">static</span> <span class="built_in">NSMutableDictionary</span> *_timers;</span><br><span class="line"></span><br><span class="line">dispatch_semaphore_t _semaphore;</span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">void</span>)initialize &#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">dispatch_once_t</span> onceToken;</span><br><span class="line">    <span class="built_in">dispatch_once</span>(&amp;onceToken, ^&#123;</span><br><span class="line">        _timers = [<span class="built_in">NSMutableDictionary</span> dictionary];</span><br><span class="line">        _semaphore = dispatch_semaphore_create(<span class="number">1</span>);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">+ (<span class="built_in">NSString</span> *)execTask:(<span class="keyword">void</span> (^)(<span class="keyword">void</span>))task start:(<span class="built_in">NSTimeInterval</span>)start interval:(<span class="built_in">NSTimeInterval</span>)interval repeats:(<span class="built_in">BOOL</span>)repeats async:(<span class="built_in">BOOL</span>)async &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (!task || start &lt; <span class="number">0</span> || (interval &lt;= <span class="number">0</span> &amp;&amp; repeats)) <span class="keyword">return</span> <span class="literal">nil</span>;</span><br><span class="line">    <span class="comment">//队列</span></span><br><span class="line">    <span class="built_in">dispatch_queue_t</span> queue = async ? dispatch_get_global_queue(<span class="number">0</span>, <span class="number">0</span>) : dispatch_get_main_queue();</span><br><span class="line">    <span class="comment">//创建定时器</span></span><br><span class="line">    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, <span class="number">0</span>, <span class="number">0</span>, queue);</span><br><span class="line">    <span class="comment">//设置时间</span></span><br><span class="line">    dispatch_source_set_timer(timer, DISPATCH_TIME_NOW, <span class="number">1</span> * <span class="built_in">NSEC_PER_SEC</span>, <span class="number">0</span> * <span class="built_in">NSEC_PER_SEC</span>);</span><br><span class="line">    </span><br><span class="line">    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);</span><br><span class="line">    <span class="comment">//定时器的标示</span></span><br><span class="line">    <span class="built_in">NSString</span> *name = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%ld"</span>,_timers.count];</span><br><span class="line">    </span><br><span class="line">    _timers[name] = timer;</span><br><span class="line">    </span><br><span class="line">    dispatch_semaphore_signal(_semaphore);</span><br><span class="line">    <span class="comment">//设置回调</span></span><br><span class="line">    dispatch_source_set_event_handler(timer, ^&#123;</span><br><span class="line">        </span><br><span class="line">        task();</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (!repeats) &#123; <span class="comment">//不重复任务</span></span><br><span class="line">            [<span class="keyword">self</span> cancelTask:name];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//启动定时器</span></span><br><span class="line">    dispatch_resume(timer);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> name;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">void</span>)cancelTask:(<span class="built_in">NSString</span> *)name &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (!name) <span class="keyword">return</span>;</span><br><span class="line">    </span><br><span class="line">    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);</span><br><span class="line">    </span><br><span class="line">    dispatch_source_t timer = _timers[name];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (timer) &#123;</span><br><span class="line">        dispatch_source_cancel(timer);</span><br><span class="line">        [_timers removeObjectForKey:name];</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">    dispatch_semaphore_signal(_semaphore);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来我们可以直接这样使用</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__<span class="keyword">weak</span> <span class="keyword">typeof</span>(<span class="keyword">self</span>) weakSelf = <span class="keyword">self</span>;</span><br><span class="line">  <span class="keyword">self</span>.task = [YQTimer execTask:^&#123;</span><br><span class="line">      [weakSelf test];</span><br><span class="line">  &#125; start:<span class="number">2</span> interval:<span class="number">1</span> repeats:<span class="literal">YES</span> async:<span class="literal">NO</span>];</span><br></pre></td></tr></table></figure>
+<p>并且可以通过返回的定时器名称调用<code>[YQTimer cancelTask:self.task];</code>随时取消该定时器。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+
+   <div>
+      
+   </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/31/multithread/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -843,44 +1247,46 @@
 <p>现在呢，就来了解一下到底什么是Runtime。</p>
 <h4 id="NSObject"><a href="#NSObject" class="headerlink" title="NSObject"></a>NSObject</h4><p>我们想要了解Runtime，首先得明白NSObject的内部结构。</p>
 <p>NSObject的定义如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">typedef struct objc_class *Class;</span><br><span class="line"></span><br><span class="line">@interface NSObject &lt;NSObject&gt; &#123;</span><br><span class="line">    Class isa  OBJC_ISA_AVAILABILITY;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> objc_class *Class;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">NSObject</span> &lt;<span class="title">NSObject</span>&gt; </span>&#123;</span><br><span class="line">    Class isa  OBJC_ISA_AVAILABILITY;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>在Objc2.0之前objc_class的内部结构如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">struct objc_class &#123;</span><br><span class="line">    Class _Nonnull isa  OBJC_ISA_AVAILABILITY;</span><br><span class="line"></span><br><span class="line">#if !__OBJC2__</span><br><span class="line">    Class _Nullable super_class                              OBJC2_UNAVAILABLE;</span><br><span class="line">    const char * _Nonnull name                               OBJC2_UNAVAILABLE;</span><br><span class="line">    long version                                             OBJC2_UNAVAILABLE;</span><br><span class="line">    long info                                                OBJC2_UNAVAILABLE;</span><br><span class="line">    long instance_size                                       OBJC2_UNAVAILABLE;</span><br><span class="line">    struct objc_ivar_list * _Nullable ivars                  OBJC2_UNAVAILABLE;</span><br><span class="line">    struct objc_method_list * _Nullable * _Nullable methodLists                    OBJC2_UNAVAILABLE;</span><br><span class="line">    struct objc_cache * _Nonnull cache                       OBJC2_UNAVAILABLE;</span><br><span class="line">    struct objc_protocol_list * _Nullable protocols          OBJC2_UNAVAILABLE;</span><br><span class="line">#endif</span><br><span class="line"></span><br><span class="line">&#125; OBJC2_UNAVAILABLE;</span><br><span class="line">/* Use `Class` instead of `struct objc_class *` */</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> objc_class &#123;</span><br><span class="line">    Class _Nonnull isa  OBJC_ISA_AVAILABILITY;</span><br><span class="line"></span><br><span class="line"><span class="meta">#if !__OBJC2__</span></span><br><span class="line">    Class _Nullable super_class                              OBJC2_UNAVAILABLE;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> * _Nonnull name                               OBJC2_UNAVAILABLE;</span><br><span class="line">    <span class="keyword">long</span> version                                             OBJC2_UNAVAILABLE;</span><br><span class="line">    <span class="keyword">long</span> info                                                OBJC2_UNAVAILABLE;</span><br><span class="line">    <span class="keyword">long</span> instance_size                                       OBJC2_UNAVAILABLE;</span><br><span class="line">    <span class="keyword">struct</span> objc_ivar_list * _Nullable ivars                  OBJC2_UNAVAILABLE;</span><br><span class="line">    <span class="keyword">struct</span> objc_method_list * _Nullable * _Nullable methodLists                    OBJC2_UNAVAILABLE;</span><br><span class="line">    <span class="keyword">struct</span> objc_cache * _Nonnull cache                       OBJC2_UNAVAILABLE;</span><br><span class="line">    <span class="keyword">struct</span> objc_protocol_list * _Nullable protocols          OBJC2_UNAVAILABLE;</span><br><span class="line"><span class="meta">#endif</span></span><br><span class="line"></span><br><span class="line">&#125; OBJC2_UNAVAILABLE;</span><br><span class="line"><span class="comment">/* Use `Class` instead of `struct objc_class *` */</span></span><br></pre></td></tr></table></figure>
 <p> 从上边我们可以看出来，在一个类中，有superclass的指针，类名，版本信息等等</p>
 <p>既然上边的已经过时，我们就不做研究。在objc2.0之后，objc_class的定义发生了很大的变化</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">/// An opaque type that represents an Objective-C class.</span><br><span class="line">typedef struct objc_class *Class;</span><br><span class="line"></span><br><span class="line">/// A pointer to an instance of a class.</span><br><span class="line">typedef struct objc_object *id;</span><br><span class="line"></span><br><span class="line">struct objc_object &#123;</span><br><span class="line">private:</span><br><span class="line">    isa_t isa;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct objc_class : objc_object &#123;</span><br><span class="line">    // Class ISA;</span><br><span class="line">    Class superclass;</span><br><span class="line">    cache_t cache;             // formerly cache pointer and vtable</span><br><span class="line">    class_data_bits_t bits;    // class_rw_t * plus custom rr/alloc flags</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">union isa_t </span><br><span class="line">&#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// An opaque type that represents an Objective-C class.</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> objc_class *Class;</span><br><span class="line"></span><br><span class="line"><span class="comment">/// A pointer to an instance of a class.</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> objc_object *<span class="keyword">id</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> objc_object &#123;</span><br><span class="line">private:</span><br><span class="line">    isa_t isa;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> objc_class : objc_object &#123;</span><br><span class="line">    <span class="comment">// Class ISA;</span></span><br><span class="line">    Class superclass;</span><br><span class="line">    cache_t cache;             <span class="comment">// formerly cache pointer and vtable</span></span><br><span class="line">    class_data_bits_t bits;    <span class="comment">// class_rw_t * plus custom rr/alloc flags</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">union</span> isa_t </span><br><span class="line">&#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><code>objc_class</code>继承了一个叫<code>objc_object</code>的结构体。在arm64架构之前，isa就是一个普通的指针，存储着class、meta-class对象的内存地址。从arm64架构开始，对isa进行了优化，变成了isa_t的一个共用体结构，并且使用位域来存储更多的信息。</p>
 <blockquote>
 <p>所有继承自NSObject的类实例变量的对象都会包含一个isa_t的结构体</p>
 </blockquote>
 <p>由于objc_class结构体继承自objc_object的，所以可以这样理解</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct objc_class : objc_object &#123;</span><br><span class="line">    isa_t isa;</span><br><span class="line">    Class superclass;</span><br><span class="line">    cache_t cache;            </span><br><span class="line">    class_data_bits_t bits;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> objc_class : objc_object &#123;</span><br><span class="line">    isa_t isa;</span><br><span class="line">    Class superclass;</span><br><span class="line">    cache_t cache;            </span><br><span class="line">    class_data_bits_t bits;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>图解如下：</p>
 <p><img src="/2018/07/19/runtime-Class/class.png"></p>
 <h3 id="isa-t的实现"><a href="#isa-t的实现" class="headerlink" title="isa_t的实现"></a>isa_t的实现</h3><p>下面我们只看在arm64架构下的情况</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">union isa_t </span><br><span class="line">&#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line"></span><br><span class="line"># if __arm64__</span><br><span class="line">#   define ISA_MASK        0x0000000ffffffff8ULL</span><br><span class="line">#   define ISA_MAGIC_MASK  0x000003f000000001ULL</span><br><span class="line">#   define ISA_MAGIC_VALUE 0x000001a000000001ULL</span><br><span class="line">    struct &#123;</span><br><span class="line">        uintptr_t nonpointer        : 1;</span><br><span class="line">        uintptr_t has_assoc         : 1;</span><br><span class="line">        uintptr_t has_cxx_dtor      : 1;</span><br><span class="line">        uintptr_t shiftcls          : 33; // MACH_VM_MAX_ADDRESS 0x1000000000</span><br><span class="line">        uintptr_t magic             : 6;</span><br><span class="line">        uintptr_t weakly_referenced : 1;</span><br><span class="line">        uintptr_t deallocating      : 1;</span><br><span class="line">        uintptr_t has_sidetable_rc  : 1;</span><br><span class="line">        uintptr_t extra_rc          : 19;</span><br><span class="line">#       define RC_ONE   (1ULL&lt;&lt;45)</span><br><span class="line">#       define RC_HALF  (1ULL&lt;&lt;18)</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">union</span> isa_t </span><br><span class="line">&#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line"></span><br><span class="line"><span class="meta"># if __arm64__</span></span><br><span class="line"><span class="meta">#   define ISA_MASK        0x0000000ffffffff8ULL</span></span><br><span class="line"><span class="meta">#   define ISA_MAGIC_MASK  0x000003f000000001ULL</span></span><br><span class="line"><span class="meta">#   define ISA_MAGIC_VALUE 0x000001a000000001ULL</span></span><br><span class="line">    <span class="keyword">struct</span> &#123;</span><br><span class="line">        uintptr_t nonpointer        : <span class="number">1</span>;</span><br><span class="line">        uintptr_t has_assoc         : <span class="number">1</span>;</span><br><span class="line">        uintptr_t has_cxx_dtor      : <span class="number">1</span>;</span><br><span class="line">        uintptr_t shiftcls          : <span class="number">33</span>; <span class="comment">// MACH_VM_MAX_ADDRESS 0x1000000000</span></span><br><span class="line">        uintptr_t magic             : <span class="number">6</span>;</span><br><span class="line">        uintptr_t weakly_referenced : <span class="number">1</span>;</span><br><span class="line">        uintptr_t deallocating      : <span class="number">1</span>;</span><br><span class="line">        uintptr_t has_sidetable_rc  : <span class="number">1</span>;</span><br><span class="line">        uintptr_t extra_rc          : <span class="number">19</span>;</span><br><span class="line"><span class="meta">#       define RC_ONE   (1ULL<span class="meta-string">&lt;&lt;45)</span></span></span><br><span class="line"><span class="meta"><span class="meta-string">#       define RC_HALF  (1ULL&lt;&lt;18)</span></span></span><br><span class="line"><span class="meta"><span class="meta-string">    &#125;;</span></span></span><br><span class="line"><span class="meta"><span class="meta-string">&#125;</span></span></span><br></pre></td></tr></table></figure>
 <p><img src="/2018/07/19/runtime-Class/isa1.png"></p>
 <p><strong>nonpointer</strong></p>
-<p>​    0，代表普通的指针，存着class，meta-class对象的内存地址</p>
-<p>​    1，表示当前isa不是指针，使用位域来存储更多的信息，关于类的指针保存在shiftcls中</p>
-<p><strong>has_assoc</strong></p>
-<p>​    是否有设置<strong>过</strong>关联对象,如果没有，释放时会更快</p>
-<p><strong>has_cxx_dtor</strong></p>
-<p>​    是否有C++的析构函数，如果没有，释放时会更快</p>
-<p><strong>shiftcls</strong></p>
-<p>​    存储着class，meta-class对象的内存地址信息</p>
-<p><strong>magic</strong></p>
-<p>​    判断对象是否完成初始化</p>
-<p><strong>weakly_referenced</strong> </p>
-<p>​    对象是否曾经被弱引用指向过，如果没有，释放更快</p>
-<p><strong>deallocating</strong></p>
-<p>​    对象是否正在释放内存</p>
-<p><strong>has_sidetable_rc</strong></p>
-<p>​    引用计数器是否过大，无法存储在isa中</p>
-<p>​    如果为1，那么引用计数会存储在一个sidetable的类的属性中</p>
-<p><strong>extra_rc</strong></p>
-<p>​    存放引用计数器-1的结果</p>
-<p>这里我创建一个Test类</p>
+<pre><code>0，代表普通的指针，存着class，meta-class对象的内存地址
+
+1，表示当前isa不是指针，使用位域来存储更多的信息，关于类的指针保存在shiftcls中
+</code></pre><p><strong>has_assoc</strong></p>
+<pre><code>是否有设置**过**关联对象,如果没有，释放时会更快
+</code></pre><p><strong>has_cxx_dtor</strong></p>
+<pre><code>是否有C++的析构函数，如果没有，释放时会更快
+</code></pre><p><strong>shiftcls</strong></p>
+<pre><code>存储着class，meta-class对象的内存地址信息
+</code></pre><p><strong>magic</strong></p>
+<pre><code>判断对象是否完成初始化
+</code></pre><p><strong>weakly_referenced</strong> </p>
+<pre><code>对象是否曾经被弱引用指向过，如果没有，释放更快
+</code></pre><p><strong>deallocating</strong></p>
+<pre><code>对象是否正在释放内存
+</code></pre><p><strong>has_sidetable_rc</strong></p>
+<pre><code>引用计数器是否过大，无法存储在isa中
+
+如果为1，那么引用计数会存储在一个sidetable的类的属性中
+</code></pre><p><strong>extra_rc</strong></p>
+<pre><code>存放引用计数器-1的结果
+</code></pre><p>这里我创建一个Test类</p>
 <p><img src="/2018/07/19/runtime-Class/isa3.png"></p>
 <p>上图我们可以看出，isa的地址和<code>ISA_MASK</code>进行运算之后和class的地址完全相同，都为<code>0x00000001000fce20</code>,转换成2进制之后可以看到和下边的内容刚好对照。</p>
 <p>我们可以得到isa的地址为<code>0x000001a1000fce21</code> ,转化为2进制，结构如下</p>
@@ -889,9 +1295,9 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">inline Class </span><br><span class="line">objc_object::ISA() </span><br><span class="line">&#123;</span><br><span class="line">    assert(!isTaggedPointer()); </span><br><span class="line">    return (Class)(isa.bits &amp; ISA_MASK);</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>上面<code>has_assoc</code> 和 <code>weakly_referenced</code> 可以通过代码来验证，上图会发生变化，现在的值为0，一旦有关联对象或被弱引用过，值会变为1。</p>
 <p>下边源码也可以证明，没有C++析构函数和关联对象，释放会更快。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">void *objc_destructInstance(id obj) </span><br><span class="line">&#123;</span><br><span class="line">    if (obj) &#123;</span><br><span class="line">        // Read all of the flags at once for performance.</span><br><span class="line">        bool cxx = obj-&gt;hasCxxDtor();</span><br><span class="line">        bool assoc = obj-&gt;hasAssociatedObjects();</span><br><span class="line"></span><br><span class="line">        // This order is important.</span><br><span class="line">        if (cxx) object_cxxDestruct(obj);</span><br><span class="line">        if (assoc) _object_remove_assocations(obj);</span><br><span class="line">        obj-&gt;clearDeallocating();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> *objc_destructInstance(<span class="keyword">id</span> obj) </span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (obj) &#123;</span><br><span class="line">        <span class="comment">// Read all of the flags at once for performance.</span></span><br><span class="line">        <span class="keyword">bool</span> cxx = obj-&gt;hasCxxDtor();</span><br><span class="line">        <span class="keyword">bool</span> assoc = obj-&gt;hasAssociatedObjects();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// This order is important.</span></span><br><span class="line">        <span class="keyword">if</span> (cxx) object_cxxDestruct(obj);</span><br><span class="line">        <span class="keyword">if</span> (assoc) _object_remove_assocations(obj);</span><br><span class="line">        obj-&gt;clearDeallocating();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="cache-t的实现"><a href="#cache-t的实现" class="headerlink" title="cache_t的实现"></a>cache_t的实现</h3><p>还是先看源码</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">struct cache_t &#123;</span><br><span class="line">    struct bucket_t *_buckets;		</span><br><span class="line">    mask_t _mask;					</span><br><span class="line">    mask_t _occupied;				</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct bucket_t &#123;</span><br><span class="line">private:</span><br><span class="line">    cache_key_t _key;</span><br><span class="line">    IMP _imp;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">typedef unsigned long uintptr_t;</span><br><span class="line">typedef uintptr_t cache_key_t;</span><br><span class="line"></span><br><span class="line">typedef unsigned int uint32_t;</span><br><span class="line">typedef uint32_t mask_t;  // x86_64 &amp; arm64 asm are less efficient with 16-bits</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> cache_t &#123;</span><br><span class="line">    <span class="keyword">struct</span> bucket_t *_buckets;		</span><br><span class="line">    mask_t _mask;					</span><br><span class="line">    mask_t _occupied;				</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> bucket_t &#123;</span><br><span class="line">private:</span><br><span class="line">    cache_key_t _key;</span><br><span class="line">    IMP _imp;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> uintptr_t;</span><br><span class="line"><span class="keyword">typedef</span> uintptr_t cache_key_t;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> uint32_t;</span><br><span class="line"><span class="keyword">typedef</span> uint32_t mask_t;  <span class="comment">// x86_64 &amp; arm64 asm are less efficient with 16-bits</span></span><br></pre></td></tr></table></figure>
 <p><img src="/2018/07/19/runtime-Class/cache_t.png"></p>
 <p>cache的作用就是为了优化方法调用的性能。用散列表来缓存曾经调用过的方法，可以提高方法的查找速度。大家都知道当一个对象调用方法时，首先会根据对象的isa指针找到对应的类，然后在类的methodlist中来查找方法，如果没有找到，就会在父类中查找，一旦找到就调用方法。如果没有找到的话就会出现常见的<code>unrecognized selector sent to instance</code>错误。</p>
 <p><strong>bucket_t</strong></p>
@@ -913,21 +1319,21 @@
 <p>我们也可以打印<code>buckets</code>里边的内容，发现确确实实缓存了三个方法。</p>
 <p><img src="/2018/07/19/runtime-Class/cache_t_code5.png"></p>
 <p>下边是查找方法</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">bucket_t * cache_t::find(cache_key_t k, id receiver)</span><br><span class="line">&#123;</span><br><span class="line">    assert(k != 0);</span><br><span class="line"></span><br><span class="line">    bucket_t *b = buckets();</span><br><span class="line">    mask_t m = mask();</span><br><span class="line">    mask_t begin = cache_hash(k, m);</span><br><span class="line">    mask_t i = begin;</span><br><span class="line">    do &#123;</span><br><span class="line">        if (b[i].key() == 0  ||  b[i].key() == k) &#123;	//</span><br><span class="line">            return &amp;b[i];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; while ((i = cache_next(i, m)) != begin);</span><br><span class="line"></span><br><span class="line">    // hack</span><br><span class="line">    Class cls = (Class)((uintptr_t)this - offsetof(objc_class, cache));</span><br><span class="line">    cache_t::bad_cache(receiver, (SEL)k, cls);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static inline mask_t cache_hash(cache_key_t key, mask_t mask) </span><br><span class="line">&#123;</span><br><span class="line">    return (mask_t)(key &amp; mask);	//通过key &amp; mask 来获取</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">bucket_t * cache_t::find(cache_key_t k, <span class="keyword">id</span> receiver)</span><br><span class="line">&#123;</span><br><span class="line">    assert(k != <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    bucket_t *b = buckets();</span><br><span class="line">    mask_t m = mask();</span><br><span class="line">    mask_t begin = cache_hash(k, m);</span><br><span class="line">    mask_t i = begin;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (b[i].key() == <span class="number">0</span>  ||  b[i].key() == k) &#123;	<span class="comment">//</span></span><br><span class="line">            <span class="keyword">return</span> &amp;b[i];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">while</span> ((i = cache_next(i, m)) != begin);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// hack</span></span><br><span class="line">    Class cls = (Class)((uintptr_t)<span class="keyword">this</span> - offsetof(objc_class, cache));</span><br><span class="line">    cache_t::bad_cache(receiver, (SEL)k, cls);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> mask_t cache_hash(cache_key_t key, mask_t mask) </span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> (mask_t)(key &amp; mask);	<span class="comment">//通过key &amp; mask 来获取</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>有时候会出现，<code>key&amp;mask</code>的值出现一致的情况。源码也针对这个情况做了处理。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">#if __arm__  ||  __x86_64__  ||  __i386__</span><br><span class="line">// objc_msgSend has few registers available.</span><br><span class="line">// Cache scan increments and wraps at special end-marking bucket.</span><br><span class="line">#define CACHE_END_MARKER 1</span><br><span class="line">static inline mask_t cache_next(mask_t i, mask_t mask) &#123;</span><br><span class="line">    return (i+1) &amp; mask;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#elif __arm64__</span><br><span class="line">// objc_msgSend has lots of registers available.</span><br><span class="line">// Cache scan decrements. No end marker needed.</span><br><span class="line">#define CACHE_END_MARKER 0</span><br><span class="line">static inline mask_t cache_next(mask_t i, mask_t mask) &#123;</span><br><span class="line">    return i ? i-1 : mask;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="class-data-bits-t-的实现"><a href="#class-data-bits-t-的实现" class="headerlink" title="class_data_bits_t 的实现"></a>class_data_bits_t 的实现</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">struct class_data_bits_t &#123;</span><br><span class="line"></span><br><span class="line">    // Values are the FAST_ flags above.</span><br><span class="line">    uintptr_t bits;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct class_rw_t &#123;</span><br><span class="line">    // Be warned that Symbolication knows the layout of this structure.</span><br><span class="line">    uint32_t flags;</span><br><span class="line">    uint32_t version;</span><br><span class="line"></span><br><span class="line">    const class_ro_t *ro;</span><br><span class="line"></span><br><span class="line">    method_array_t methods;</span><br><span class="line">    property_array_t properties;</span><br><span class="line">    protocol_array_t protocols;</span><br><span class="line"></span><br><span class="line">    Class firstSubclass;</span><br><span class="line">    Class nextSiblingClass;</span><br><span class="line"></span><br><span class="line">    char *demangledName;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct class_ro_t &#123;</span><br><span class="line">    uint32_t flags;</span><br><span class="line">    uint32_t instanceStart;</span><br><span class="line">    uint32_t instanceSize;</span><br><span class="line">#ifdef __LP64__</span><br><span class="line">    uint32_t reserved;</span><br><span class="line">#endif</span><br><span class="line"></span><br><span class="line">    const uint8_t * ivarLayout;</span><br><span class="line">    </span><br><span class="line">    const char * name;</span><br><span class="line">    method_list_t * baseMethodList;</span><br><span class="line">    protocol_list_t * baseProtocols;</span><br><span class="line">    const ivar_list_t * ivars;</span><br><span class="line"></span><br><span class="line">    const uint8_t * weakIvarLayout;</span><br><span class="line">    property_list_t *baseProperties;</span><br><span class="line"></span><br><span class="line">    method_list_t *baseMethods() const &#123;</span><br><span class="line">        return baseMethodList;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#if __arm__  ||  __x86_64__  ||  __i386__</span></span><br><span class="line"><span class="comment">// objc_msgSend has few registers available.</span></span><br><span class="line"><span class="comment">// Cache scan increments and wraps at special end-marking bucket.</span></span><br><span class="line"><span class="meta">#define CACHE_END_MARKER 1</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> mask_t cache_next(mask_t i, mask_t mask) &#123;</span><br><span class="line">    <span class="keyword">return</span> (i+<span class="number">1</span>) &amp; mask;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#elif __arm64__</span></span><br><span class="line"><span class="comment">// objc_msgSend has lots of registers available.</span></span><br><span class="line"><span class="comment">// Cache scan decrements. No end marker needed.</span></span><br><span class="line"><span class="meta">#define CACHE_END_MARKER 0</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> mask_t cache_next(mask_t i, mask_t mask) &#123;</span><br><span class="line">    <span class="keyword">return</span> i ? i<span class="number">-1</span> : mask;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="class-data-bits-t-的实现"><a href="#class-data-bits-t-的实现" class="headerlink" title="class_data_bits_t 的实现"></a>class_data_bits_t 的实现</h3><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> class_data_bits_t &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Values are the FAST_ flags above.</span></span><br><span class="line">    uintptr_t bits;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> class_rw_t &#123;</span><br><span class="line">    <span class="comment">// Be warned that Symbolication knows the layout of this structure.</span></span><br><span class="line">    uint32_t flags;</span><br><span class="line">    uint32_t version;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> class_ro_t *ro;</span><br><span class="line"></span><br><span class="line">    method_array_t methods;</span><br><span class="line">    property_array_t properties;</span><br><span class="line">    protocol_array_t protocols;</span><br><span class="line"></span><br><span class="line">    Class firstSubclass;</span><br><span class="line">    Class nextSiblingClass;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span> *demangledName;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> class_ro_t &#123;</span><br><span class="line">    uint32_t flags;</span><br><span class="line">    uint32_t instanceStart;</span><br><span class="line">    uint32_t instanceSize;</span><br><span class="line"><span class="meta">#ifdef __LP64__</span></span><br><span class="line">    uint32_t reserved;</span><br><span class="line"><span class="meta">#endif</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> uint8_t * ivarLayout;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> * name;</span><br><span class="line">    method_list_t * baseMethodList;</span><br><span class="line">    protocol_list_t * baseProtocols;</span><br><span class="line">    <span class="keyword">const</span> ivar_list_t * ivars;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> uint8_t * weakIvarLayout;</span><br><span class="line">    property_list_t *baseProperties;</span><br><span class="line"></span><br><span class="line">    method_list_t *baseMethods() <span class="keyword">const</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> baseMethodList;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 <p><img src="/2018/07/19/runtime-Class/bits.png"></p>
 <p><code>class_rw_t</code> 也是通过掩码的方式来获取的。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// data pointer</span><br><span class="line">#define FAST_DATA_MASK          0x00007ffffffffff8UL</span><br><span class="line"></span><br><span class="line">class_rw_t* data() &#123;</span><br><span class="line">	return (class_rw_t *)(bits &amp; FAST_DATA_MASK);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// data pointer</span></span><br><span class="line"><span class="meta">#define FAST_DATA_MASK          0x00007ffffffffff8UL</span></span><br><span class="line"></span><br><span class="line">class_rw_t* data() &#123;</span><br><span class="line">	<span class="keyword">return</span> (class_rw_t *)(bits &amp; FAST_DATA_MASK);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><code>class_rw_t</code>中的<code>methods</code>、<code>properties</code>、<code>protocols</code> 是二维数组，是可读可写的，包含了类的初始内容和分类的内容。由于是可读可写的，更加方便我们修改，每一个<code>method_list_t</code>就是一个分类的的方法列表。下图以<code>methods</code>为例</p>
 <p><img src="/2018/07/19/runtime-Class/class_rw_t.png"></p>
 <p><code>class_ro_t</code>中的<code>baseMethodList</code>、<code>baseProtocols</code>、<code>ivars</code>、<code>baseProperties</code>都是一维数组，是只读的，包含了类的初始内容</p>
 <p><img src="/2018/07/19/runtime-Class/class_ro_t.png"></p>
 <p>在运行时查找分类的时候会调用<code>remethodizeClass</code>方法，把分类的方法合并的类中去。在此之前会调用<code>realizeClass</code>方法。一开始<code>class_rw_t</code>是不存在的，后来才分配内存，将<code>ro</code>赋值到<code>rw_t-&gt;ro</code> 中</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">static Class realizeClass(Class cls)</span><br><span class="line">&#123;</span><br><span class="line">    runtimeLock.assertWriting();</span><br><span class="line"></span><br><span class="line">    const class_ro_t *ro;</span><br><span class="line">    class_rw_t *rw;</span><br><span class="line">    Class supercls;</span><br><span class="line">    Class metacls;</span><br><span class="line">    bool isMeta;</span><br><span class="line"></span><br><span class="line">    if (!cls) return nil;</span><br><span class="line">    if (cls-&gt;isRealized()) return cls;</span><br><span class="line">    assert(cls == remapClass(cls));</span><br><span class="line"></span><br><span class="line">    // fixme verify class is not in an un-dlopened part of the shared cache?</span><br><span class="line"></span><br><span class="line">    ro = (const class_ro_t *)cls-&gt;data();					//初始数据</span><br><span class="line">    if (ro-&gt;flags &amp; RO_FUTURE) &#123;</span><br><span class="line">        // This was a future class. rw data is already allocated.</span><br><span class="line">        rw = cls-&gt;data();</span><br><span class="line">        ro = cls-&gt;data()-&gt;ro;</span><br><span class="line">        cls-&gt;changeInfo(RW_REALIZED|RW_REALIZING, RW_FUTURE);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        // Normal class. Allocate writeable class data.</span><br><span class="line">        rw = (class_rw_t *)calloc(sizeof(class_rw_t), 1);	//在这里才分配内存</span><br><span class="line">        rw-&gt;ro = ro;										//将ro赋值给rw_t-&gt;ro</span><br><span class="line">        rw-&gt;flags = RW_REALIZED|RW_REALIZING;</span><br><span class="line">        cls-&gt;setData(rw);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    isMeta = ro-&gt;flags &amp; RO_META;</span><br><span class="line"></span><br><span class="line">    rw-&gt;version = isMeta ? 7 : 0;  // old runtime went up to 6</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // Choose an index for this class.</span><br><span class="line">    // Sets cls-&gt;instancesRequireRawIsa if indexes no more indexes are available</span><br><span class="line">    cls-&gt;chooseClassArrayIndex();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> Class realizeClass(Class cls)</span><br><span class="line">&#123;</span><br><span class="line">    runtimeLock.assertWriting();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> class_ro_t *ro;</span><br><span class="line">    class_rw_t *rw;</span><br><span class="line">    Class supercls;</span><br><span class="line">    Class metacls;</span><br><span class="line">    <span class="keyword">bool</span> isMeta;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!cls) <span class="keyword">return</span> <span class="literal">nil</span>;</span><br><span class="line">    <span class="keyword">if</span> (cls-&gt;isRealized()) <span class="keyword">return</span> cls;</span><br><span class="line">    assert(cls == remapClass(cls));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// fixme verify class is not in an un-dlopened part of the shared cache?</span></span><br><span class="line"></span><br><span class="line">    ro = (<span class="keyword">const</span> class_ro_t *)cls-&gt;data();					<span class="comment">//初始数据</span></span><br><span class="line">    <span class="keyword">if</span> (ro-&gt;flags &amp; RO_FUTURE) &#123;</span><br><span class="line">        <span class="comment">// This was a future class. rw data is already allocated.</span></span><br><span class="line">        rw = cls-&gt;data();</span><br><span class="line">        ro = cls-&gt;data()-&gt;ro;</span><br><span class="line">        cls-&gt;changeInfo(RW_REALIZED|RW_REALIZING, RW_FUTURE);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Normal class. Allocate writeable class data.</span></span><br><span class="line">        rw = (class_rw_t *)calloc(<span class="keyword">sizeof</span>(class_rw_t), <span class="number">1</span>);	<span class="comment">//在这里才分配内存</span></span><br><span class="line">        rw-&gt;ro = ro;										<span class="comment">//将ro赋值给rw_t-&gt;ro</span></span><br><span class="line">        rw-&gt;flags = RW_REALIZED|RW_REALIZING;</span><br><span class="line">        cls-&gt;setData(rw);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    isMeta = ro-&gt;flags &amp; RO_META;</span><br><span class="line"></span><br><span class="line">    rw-&gt;version = isMeta ? <span class="number">7</span> : <span class="number">0</span>;  <span class="comment">// old runtime went up to 6</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Choose an index for this class.</span></span><br><span class="line">    <span class="comment">// Sets cls-&gt;instancesRequireRawIsa if indexes no more indexes are available</span></span><br><span class="line">    cls-&gt;chooseClassArrayIndex();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="method-t"><a href="#method-t" class="headerlink" title="method_t"></a>method_t</h3><p><code>method_t</code>是对方法的封装</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct method_t &#123;</span><br><span class="line">    SEL name;				//函数名</span><br><span class="line">    const char *types;		//编码(返回值类型，参数类型)</span><br><span class="line">    IMP imp;				//指向函数的指针(函数地址)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> method_t &#123;</span><br><span class="line">    SEL name;				<span class="comment">//函数名</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *types;		<span class="comment">//编码(返回值类型，参数类型)</span></span><br><span class="line">    IMP imp;				<span class="comment">//指向函数的指针(函数地址)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><code>IMP</code>的具体实现</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">typedef id _Nullable (*IMP)(id _Nonnull, SEL _Nonnull, ...);</span><br></pre></td></tr></table></figure>
 <p><img src="/2018/07/19/runtime-Class/class_rw_t_code.png"></p>
@@ -1422,7 +1828,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1486,7 +1892,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">8.5k</span>
+    <span title="Site words total count">10.6k</span>
   
 </div>
 

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/avatar.jpg?v=5.1.4">
+
+
+
+
+  <link rel="mask-icon" href="/images/avatar.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="在我们日常开发中，定时器是我们比较常用的。但是定时器会有一定的内存问题。比如下边的代码，分别用CADisplayLink和NSTimer来执行任务， 123456789101112131415161718192021222324- (void)viewDidLoad &amp;#123;    [super viewDidLoad];        self.link = [CADisplayLink d">
+<meta property="og:type" content="article">
+<meta property="og:title" content="定时器">
+<meta property="og:url" content="http://yoursite.com/2018/08/21/timer/index.html">
+<meta property="og:site_name" content="vayneee">
+<meta property="og:description" content="在我们日常开发中，定时器是我们比较常用的。但是定时器会有一定的内存问题。比如下边的代码，分别用CADisplayLink和NSTimer来执行任务， 123456789101112131415161718192021222324- (void)viewDidLoad &amp;#123;    [super viewDidLoad];        self.link = [CADisplayLink d">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/08/21/timer/weakTarget.png">
+<meta property="og:updated_time" content="2018-08-21T09:20:55.199Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="定时器">
+<meta name="twitter:description" content="在我们日常开发中，定时器是我们比较常用的。但是定时器会有一定的内存问题。比如下边的代码，分别用CADisplayLink和NSTimer来执行任务， 123456789101112131415161718192021222324- (void)viewDidLoad &amp;#123;    [super viewDidLoad];        self.link = [CADisplayLink d">
+<meta name="twitter:image" content="http://yoursite.com/2018/08/21/timer/weakTarget.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/08/21/timer/"/>
+
+
+
+
+
+  <title>定时器 | vayneee</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">vayneee</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">起风了，唯有努力生存。</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-objc">
+          <a href="/categories/objc" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            Objective-C
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-idea">
+          <a href="/categories/idea" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br />
+            
+            想法
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/21/timer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="vayneee">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="vayneee">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">定时器</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-21T15:20:42+08:00">
+                2018-08-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/objc/" itemprop="url" rel="index">
+                    <span itemprop="name">Objective-C</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1,122
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  5
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在我们日常开发中，定时器是我们比较常用的。但是定时器会有一定的内存问题。比如下边的代码，分别用CADisplayLink和NSTimer来执行任务，</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)viewDidLoad &#123;</span><br><span class="line">    [<span class="keyword">super</span> viewDidLoad];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">self</span>.link = [<span class="built_in">CADisplayLink</span> displayLinkWithTarget:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(linkTest)];</span><br><span class="line">    [<span class="keyword">self</span>.link addToRunLoop:[<span class="built_in">NSRunLoop</span> mainRunLoop] forMode:<span class="built_in">NSDefaultRunLoopMode</span>];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">self</span>.timer = [<span class="built_in">NSTimer</span> scheduledTimerWithTimeInterval:<span class="number">1.0</span>f target:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(timerTest) userInfo:<span class="literal">nil</span> repeats:<span class="literal">YES</span>];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)timerTest &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)linkTest &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)dealloc &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line"></span><br><span class="line">    [<span class="keyword">self</span>.timer invalidate];</span><br><span class="line">    [<span class="keyword">self</span>.link invalidate];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种情况下的dealloc方法并不会执行，就算退出了当前控制器，timer依然在执行任务。</p>
+<p>分析原因：因为self强引用了link和timer，link和timer又强引用了self。由于循环引用的问题所以导致了定时器不能释放。</p>
+<h4 id="解决办法一："><a href="#解决办法一：" class="headerlink" title="解决办法一："></a>解决办法一：</h4><p>我们可以使用带block的方法使用weakself来解决上述问题。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">__<span class="keyword">weak</span> <span class="keyword">typeof</span>(<span class="keyword">self</span>) weakSelf = <span class="keyword">self</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">self</span>.timer = [<span class="built_in">NSTimer</span> scheduledTimerWithTimeInterval:<span class="number">1.0</span>f repeats:<span class="literal">YES</span> block:^(<span class="built_in">NSTimer</span> * _Nonnull timer) &#123;</span><br><span class="line">      [weakSelf timerTest];</span><br><span class="line">  &#125;];</span><br></pre></td></tr></table></figure>
+<h4 id="解决办法二："><a href="#解决办法二：" class="headerlink" title="解决办法二："></a>解决办法二：</h4><p>产生上述问题的原因就是因为循环引用的问题。所以我们可以设置一个中间对象来解决。</p>
+<p><img src="/2018/08/21/timer/weakTarget.png"></p>
+<p>创建一个中间类，它对<code>self</code>进行一个弱引用。这里我这个<code>proxy</code>继承了<code>NSObject</code>，由于<code>NSObject</code>并没有<code>self</code>的两个<code>test</code>方法，所以需要进行消息转发。 当然我们可以直接继承<code>NSProxy</code>类更好</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">YQProxy</span> : <span class="title">NSObject</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">@property</span>(<span class="keyword">nonatomic</span>, <span class="keyword">assign</span>) <span class="keyword">id</span> target;</span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">instancetype</span>)proxyWithTarget:(<span class="keyword">id</span>)target;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line">    </span><br><span class="line"><span class="meta">#import <span class="meta-string">"YQProxy.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">YQProxy</span></span></span><br><span class="line">+ (<span class="keyword">instancetype</span>)proxyWithTarget:(<span class="keyword">id</span>)target &#123;</span><br><span class="line">    YQProxy *proxy = [[YQProxy alloc] init];</span><br><span class="line">    proxy.target = target;</span><br><span class="line">    <span class="keyword">return</span> proxy;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">id</span>)forwardingTargetForSelector:(SEL)aSelector &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">self</span>.target;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+<p>之后我们这样调用，当退出控制器的时候，timer就能正常释放了。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">self</span>.link = [<span class="built_in">CADisplayLink</span> displayLinkWithTarget:[YQProxy proxyWithTarget:<span class="keyword">self</span>] selector:<span class="keyword">@selector</span>(linkTest)];</span><br><span class="line">[<span class="keyword">self</span>.link addToRunLoop:[<span class="built_in">NSRunLoop</span> mainRunLoop] forMode:<span class="built_in">NSDefaultRunLoopMode</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">self</span>.timer = [<span class="built_in">NSTimer</span> scheduledTimerWithTimeInterval:<span class="number">1.0</span>f target:[YQProxy proxyWithTarget:<span class="keyword">self</span>] selector:<span class="keyword">@selector</span>(timerTest) userInfo:<span class="literal">nil</span> repeats:<span class="literal">YES</span>];</span><br></pre></td></tr></table></figure>
+<p>由于<code>CADisplayLink</code>和<code>NSTimer</code>都是基于<code>NSRunLoop</code>的，可能会导致它不准时，主线程的 <code>RunLoop</code> 里有两个预置的 <code>Mode</code>：<code>kCFRunLoopDefaultMode</code> 和 <code>UITrackingRunLoopMode</code>。这两个 <code>Mode</code>都已经被标记为<code>Common</code>属性。<code>DefaultMode</code> 是 App 平时所处的状态，<code>TrackingRunLoopMode</code> 是追踪 ScrollView 滑动时的状态。当你创建一个 Timer 并加到 DefaultMode 时，Timer 会得到重复回调，但此时滑动一个TableView时，RunLoop 会将 mode 切换为 TrackingRunLoopMode，这时 Timer 就不会被回调，并且也不会影响到滑动操作。所以想要在scrollView滑动时候，timer继续工作，就需要将timer加入到这两个mode中或者<code>NSRunLoopCommonModes</code>中。</p>
+<p>关于<code>RunLoop</code>的知识可以看Y神的<a href="https://blog.ibireme.com/2015/05/18/runloop/" target="_blank" rel="noopener">深入理解RunLoop</a>。</p>
+<h4 id="GCD定时器"><a href="#GCD定时器" class="headerlink" title="GCD定时器"></a>GCD定时器</h4><p>GCD中也有自己的定时器，当然GCD的定时器不受RunLoop影响，比NSTimer更加准时。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, <span class="number">0</span>, <span class="number">0</span>, dispatch_get_main_queue());</span><br><span class="line"></span><br><span class="line">   dispatch_source_set_timer(<span class="keyword">self</span>.timer, DISPATCH_TIME_NOW, <span class="number">1</span> * <span class="built_in">NSEC_PER_SEC</span>, <span class="number">0</span> * <span class="built_in">NSEC_PER_SEC</span>);</span><br><span class="line"></span><br><span class="line">   dispatch_source_set_event_handler(<span class="keyword">self</span>.timer, ^&#123;</span><br><span class="line">       <span class="built_in">NSLog</span>(<span class="string">@"gcd timer"</span>);</span><br><span class="line">   &#125;);</span><br><span class="line"></span><br><span class="line">   dispatch_resume(<span class="keyword">self</span>.timer);</span><br><span class="line"></span><br><span class="line"><span class="keyword">self</span>.timer = timer;</span><br></pre></td></tr></table></figure>
+<p>我自己封装了一个GCD的定时器</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">YQTimer</span> : <span class="title">NSObject</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> GCD定时器</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> @param task 回调</span></span><br><span class="line"><span class="comment"> @param start 开始时间</span></span><br><span class="line"><span class="comment"> @param interval 时间间隔</span></span><br><span class="line"><span class="comment"> @param repeats 是否重复</span></span><br><span class="line"><span class="comment"> @param async 是否异步</span></span><br><span class="line"><span class="comment"> @return 返回一个定时器的名字</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">+ (<span class="built_in">NSString</span> *)execTask:(<span class="keyword">void</span>(^)(<span class="keyword">void</span>))task</span><br><span class="line">                 start:(<span class="built_in">NSTimeInterval</span>)start</span><br><span class="line">              interval:(<span class="built_in">NSTimeInterval</span>)interval</span><br><span class="line">               repeats:(<span class="built_in">BOOL</span>)repeats</span><br><span class="line">                 async:(<span class="built_in">BOOL</span>)async;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> 取消定时器</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> @param name 定时器的名字</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">+ (<span class="keyword">void</span>)cancelTask:(<span class="built_in">NSString</span> *)name;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"> </span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">YQTimer</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//用来存储定时器</span></span><br><span class="line"><span class="keyword">static</span> <span class="built_in">NSMutableDictionary</span> *_timers;</span><br><span class="line"></span><br><span class="line">dispatch_semaphore_t _semaphore;</span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">void</span>)initialize &#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">dispatch_once_t</span> onceToken;</span><br><span class="line">    <span class="built_in">dispatch_once</span>(&amp;onceToken, ^&#123;</span><br><span class="line">        _timers = [<span class="built_in">NSMutableDictionary</span> dictionary];</span><br><span class="line">        _semaphore = dispatch_semaphore_create(<span class="number">1</span>);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">+ (<span class="built_in">NSString</span> *)execTask:(<span class="keyword">void</span> (^)(<span class="keyword">void</span>))task start:(<span class="built_in">NSTimeInterval</span>)start interval:(<span class="built_in">NSTimeInterval</span>)interval repeats:(<span class="built_in">BOOL</span>)repeats async:(<span class="built_in">BOOL</span>)async &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (!task || start &lt; <span class="number">0</span> || (interval &lt;= <span class="number">0</span> &amp;&amp; repeats)) <span class="keyword">return</span> <span class="literal">nil</span>;</span><br><span class="line">    <span class="comment">//队列</span></span><br><span class="line">    <span class="built_in">dispatch_queue_t</span> queue = async ? dispatch_get_global_queue(<span class="number">0</span>, <span class="number">0</span>) : dispatch_get_main_queue();</span><br><span class="line">    <span class="comment">//创建定时器</span></span><br><span class="line">    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, <span class="number">0</span>, <span class="number">0</span>, queue);</span><br><span class="line">    <span class="comment">//设置时间</span></span><br><span class="line">    dispatch_source_set_timer(timer, DISPATCH_TIME_NOW, <span class="number">1</span> * <span class="built_in">NSEC_PER_SEC</span>, <span class="number">0</span> * <span class="built_in">NSEC_PER_SEC</span>);</span><br><span class="line">    </span><br><span class="line">    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);</span><br><span class="line">    <span class="comment">//定时器的标示</span></span><br><span class="line">    <span class="built_in">NSString</span> *name = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%ld"</span>,_timers.count];</span><br><span class="line">    </span><br><span class="line">    _timers[name] = timer;</span><br><span class="line">    </span><br><span class="line">    dispatch_semaphore_signal(_semaphore);</span><br><span class="line">    <span class="comment">//设置回调</span></span><br><span class="line">    dispatch_source_set_event_handler(timer, ^&#123;</span><br><span class="line">        </span><br><span class="line">        task();</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (!repeats) &#123; <span class="comment">//不重复任务</span></span><br><span class="line">            [<span class="keyword">self</span> cancelTask:name];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//启动定时器</span></span><br><span class="line">    dispatch_resume(timer);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> name;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">void</span>)cancelTask:(<span class="built_in">NSString</span> *)name &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (!name) <span class="keyword">return</span>;</span><br><span class="line">    </span><br><span class="line">    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);</span><br><span class="line">    </span><br><span class="line">    dispatch_source_t timer = _timers[name];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (timer) &#123;</span><br><span class="line">        dispatch_source_cancel(timer);</span><br><span class="line">        [_timers removeObjectForKey:name];</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">    dispatch_semaphore_signal(_semaphore);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来我们可以直接这样使用</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__<span class="keyword">weak</span> <span class="keyword">typeof</span>(<span class="keyword">self</span>) weakSelf = <span class="keyword">self</span>;</span><br><span class="line">  <span class="keyword">self</span>.task = [YQTimer execTask:^&#123;</span><br><span class="line">      [weakSelf test];</span><br><span class="line">  &#125; start:<span class="number">2</span> interval:<span class="number">1</span> repeats:<span class="literal">YES</span> async:<span class="literal">NO</span>];</span><br></pre></td></tr></table></figure>
+<p>并且可以通过返回的定时器名称调用<code>[YQTimer cancelTask:self.task];</code>随时取消该定时器。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/07/31/multithread/" rel="next" title="多线程同步方案">
+                <i class="fa fa-chevron-left"></i> 多线程同步方案
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/22/kvo/" rel="prev" title="KVO实现原理">
+                KVO实现原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+
+   <div>
+      
+      <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;"> - End - </div>
+    
+</div>
+
+      
+   </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="vayneee" />
+            
+              <p class="site-author-name" itemprop="name">vayneee</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#解决办法一："><span class="nav-number">1.</span> <span class="nav-text">解决办法一：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解决办法二："><span class="nav-number">2.</span> <span class="nav-text">解决办法二：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#GCD定时器"><span class="nav-number">3.</span> <span class="nav-text">GCD定时器</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">vayneee</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">10.6k</span>
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
