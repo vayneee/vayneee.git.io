@@ -78,17 +78,17 @@
 <meta name="description" content="多线程的安全隐患当多线程同时访问同一块资源时，很容易引发数据错乱和数据安全问题。 多线程同步方案OSSpinLockOSSpinLock叫做自旋锁，等待锁的线程会处于忙等状态，一直占用CPU资源，目前已经不再安全可能会出现优先级反转的问题。如果等待锁的线程优先级较高，它会一直占用CPU资源，优先级低的线程就无法释放锁。需要导入头文件#import &amp;lt;libkern/OSAtomic.h&amp;gt">
 <meta property="og:type" content="article">
 <meta property="og:title" content="多线程同步方案">
-<meta property="og:url" content="http://yoursite.com/2018/07/31/multithread/index.html">
+<meta property="og:url" content="http://yoursite.com/2017/07/31/multithread/index.html">
 <meta property="og:site_name" content="vayneee">
 <meta property="og:description" content="多线程的安全隐患当多线程同时访问同一块资源时，很容易引发数据错乱和数据安全问题。 多线程同步方案OSSpinLockOSSpinLock叫做自旋锁，等待锁的线程会处于忙等状态，一直占用CPU资源，目前已经不再安全可能会出现优先级反转的问题。如果等待锁的线程优先级较高，它会一直占用CPU资源，优先级低的线程就无法释放锁。需要导入头文件#import &amp;lt;libkern/OSAtomic.h&amp;gt">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/07/31/multithread/print.png">
-<meta property="og:image" content="http://yoursite.com/2018/07/31/multithread/barrier.png">
-<meta property="og:updated_time" content="2018-08-19T04:36:13.228Z">
+<meta property="og:image" content="http://yoursite.com/2017/07/31/multithread/print.png">
+<meta property="og:image" content="http://yoursite.com/2017/07/31/multithread/barrier.png">
+<meta property="og:updated_time" content="2018-08-30T13:07:30.488Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="多线程同步方案">
 <meta name="twitter:description" content="多线程的安全隐患当多线程同时访问同一块资源时，很容易引发数据错乱和数据安全问题。 多线程同步方案OSSpinLockOSSpinLock叫做自旋锁，等待锁的线程会处于忙等状态，一直占用CPU资源，目前已经不再安全可能会出现优先级反转的问题。如果等待锁的线程优先级较高，它会一直占用CPU资源，优先级低的线程就无法释放锁。需要导入头文件#import &amp;lt;libkern/OSAtomic.h&amp;gt">
-<meta name="twitter:image" content="http://yoursite.com/2018/07/31/multithread/print.png">
+<meta name="twitter:image" content="http://yoursite.com/2017/07/31/multithread/print.png">
 
 
 
@@ -118,7 +118,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/07/31/multithread/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/07/31/multithread/"/>
 
 
 
@@ -251,7 +251,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/31/multithread/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/31/multithread/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="vayneee">
@@ -280,8 +280,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-31T22:15:12+08:00">
-                2018-07-31
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-31T22:15:12+08:00">
+                2017-07-31
               </time>
             
 
@@ -392,7 +392,7 @@
 <h5 id="NSConditionLock"><a href="#NSConditionLock" class="headerlink" title="NSConditionLock"></a>NSConditionLock</h5><p>NSConditionLock是对NSCondition的进一步封装，可以设置具体的条件值。下面一小段来演示一下具体的使用。</p>
 <figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">	<span class="comment">//开启三个线程分别来执行三个方法   </span></span><br><span class="line">	[[[<span class="built_in">NSThread</span> alloc]initWithTarget:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(two) object:<span class="literal">nil</span>]start];</span><br><span class="line">	[[[<span class="built_in">NSThread</span> alloc]initWithTarget:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(one) object:<span class="literal">nil</span>]start];</span><br><span class="line">	[[[<span class="built_in">NSThread</span> alloc]initWithTarget:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(three) object:<span class="literal">nil</span>]start];</span><br><span class="line">	<span class="comment">//初始化条件为1    </span></span><br><span class="line">	<span class="keyword">self</span>.conditionLock = [[<span class="built_in">NSConditionLock</span> alloc]initWithCondition:<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)one &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"--one begin"</span>);</span><br><span class="line">    <span class="comment">//条件为 1  进行加锁</span></span><br><span class="line">    [<span class="keyword">self</span>.conditionLock lockWhenCondition:<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line">    </span><br><span class="line">    sleep(<span class="number">2</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//解锁 条件值改为2  则two方法可以进行加锁</span></span><br><span class="line">    [<span class="keyword">self</span>.conditionLock unlockWithCondition:<span class="number">2</span>];</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)two &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"--two begin"</span>);</span><br><span class="line">        <span class="comment">//条件为 2  进行加锁</span></span><br><span class="line">    [<span class="keyword">self</span>.conditionLock lockWhenCondition:<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line">    <span class="comment">//解锁 条件值改为3  则three方法可以进行加锁</span></span><br><span class="line">    [<span class="keyword">self</span>.conditionLock unlockWithCondition:<span class="number">3</span>];</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)three &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"--three begin"</span>);</span><br><span class="line">    <span class="comment">//条件为 3 进行加锁</span></span><br><span class="line">    [<span class="keyword">self</span>.conditionLock lockWhenCondition:<span class="number">3</span>];</span><br><span class="line">    </span><br><span class="line">    sleep(<span class="number">2</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%s"</span>, __func__);</span><br><span class="line"> </span><br><span class="line">    [<span class="keyword">self</span>.conditionLock unlock];</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>执行结果为</p>
-<p><img src="/2018/07/31/multithread/print.png"></p>
+<p><img src="/2017/07/31/multithread/print.png"></p>
 <p>我们可以看到进入方法的顺序是2 1 3，但是初始化的condition为1，所以<code>one</code>方法进行加锁，<code>two</code> <code>three</code>处于等待状态，当<code>one</code>执行完毕并且<code>sleep</code> 2秒钟之后，解锁并且把条件置为2，所以这个时候方法<code>two</code>的<code>NSLog</code>开始执行。之后以此类推。</p>
 <h5 id="synchronized"><a href="#synchronized" class="headerlink" title="@synchronized"></a>@synchronized</h5><p>@synchronized是对mutex递归锁的封装。</p>
 <figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//@synchronized(obj)内部会生成对obj对应的递归锁，然后进行加锁，解锁操作</span></span><br><span class="line"><span class="keyword">@synchronized</span>(obj) &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -436,7 +436,7 @@
 <p>上面的代码根据<code>DISPATCH_QUEUE_CONCURRENT</code>的特性，就有可能在追加到写入处理前面的处理中读取到与预期不符的数据。还可能因为非法访问导致应用异常结束。如果追加多个写入操作，则可能发生更多的问题。因此我们使用<code>dispatch_barrier_async</code>函数。</p>
 <p><code>dispatch_barrier_async</code>函数会等待追加到<code>Concurrent Dispatch Queue</code>上的并行执行的处理全部结束之后，再讲指定的处理追加到该<code>Concurrent Dispatch Queue</code>中。然后在由<code>dispatch_barrier_async</code>函数追加的处理执行完毕后，<code>Concurrent Dispatch Queue</code>才恢复一般的动作。</p>
 <p>处理流程如下图</p>
-<p><img src="/2018/07/31/multithread/barrier.png"></p>
+<p><img src="/2017/07/31/multithread/barrier.png"></p>
 
       
     </div>
@@ -461,18 +461,14 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/07/23/objc-msgSend/" rel="next" title="Objective-C Runtime 运行时二 ： Messaging">
-                <i class="fa fa-chevron-left"></i> Objective-C Runtime 运行时二 ： Messaging
-              </a>
-            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/08/21/timer/" rel="prev" title="定时器">
-                定时器 <i class="fa fa-chevron-right"></i>
+              <a href="/2018/07/01/reduceWeight/" rel="prev" title="减肥！减肥！减肥！">
+                减肥！减肥！减肥！ <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
