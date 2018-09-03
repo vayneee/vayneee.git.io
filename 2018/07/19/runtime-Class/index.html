@@ -97,7 +97,7 @@
 <meta property="og:image" content="http://yoursite.com/2018/07/19/runtime-Class/class_ro_t.png">
 <meta property="og:image" content="http://yoursite.com/2018/07/19/runtime-Class/class_rw_t_code.png">
 <meta property="og:image" content="http://yoursite.com/2018/07/19/runtime-Class/types.png">
-<meta property="og:updated_time" content="2018-08-31T03:21:52.493Z">
+<meta property="og:updated_time" content="2018-09-03T13:45:51.110Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Objective-C Runtime 运行时一 ：Class">
 <meta name="twitter:description" content="Runtime简介Runtime又叫运行时，是一套底层的 C 语言 API，是 iOS 系统的核心之一。在C语言中，在编译期函数的调用就会决定调用哪个函数。而OC的函数，属于动态调用过程，在编译期并不能决定真正调用哪个函数，只有在真正运行时才会根据函数的名称找到对应的函数来调用。 Objective-C 是一个动态语言，这意味着它不仅需要一个编译器，也需要一个运行时系统来动态得创建类和对象、进行消">
@@ -407,28 +407,25 @@
 <figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">union</span> isa_t </span><br><span class="line">&#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line"></span><br><span class="line"><span class="meta"># if __arm64__</span></span><br><span class="line"><span class="meta">#   define ISA_MASK        0x0000000ffffffff8ULL</span></span><br><span class="line"><span class="meta">#   define ISA_MAGIC_MASK  0x000003f000000001ULL</span></span><br><span class="line"><span class="meta">#   define ISA_MAGIC_VALUE 0x000001a000000001ULL</span></span><br><span class="line">    <span class="keyword">struct</span> &#123;</span><br><span class="line">        uintptr_t nonpointer        : <span class="number">1</span>;</span><br><span class="line">        uintptr_t has_assoc         : <span class="number">1</span>;</span><br><span class="line">        uintptr_t has_cxx_dtor      : <span class="number">1</span>;</span><br><span class="line">        uintptr_t shiftcls          : <span class="number">33</span>; <span class="comment">// MACH_VM_MAX_ADDRESS 0x1000000000</span></span><br><span class="line">        uintptr_t magic             : <span class="number">6</span>;</span><br><span class="line">        uintptr_t weakly_referenced : <span class="number">1</span>;</span><br><span class="line">        uintptr_t deallocating      : <span class="number">1</span>;</span><br><span class="line">        uintptr_t has_sidetable_rc  : <span class="number">1</span>;</span><br><span class="line">        uintptr_t extra_rc          : <span class="number">19</span>;</span><br><span class="line"><span class="meta">#       define RC_ONE   (1ULL<span class="meta-string">&lt;&lt;45)</span></span></span><br><span class="line"><span class="meta"><span class="meta-string">#       define RC_HALF  (1ULL&lt;&lt;18)</span></span></span><br><span class="line"><span class="meta"><span class="meta-string">    &#125;;</span></span></span><br><span class="line"><span class="meta"><span class="meta-string">&#125;</span></span></span><br></pre></td></tr></table></figure>
 <p><img src="/2018/07/19/runtime-Class/isa1.png"></p>
 <p><strong>nonpointer</strong></p>
-<pre><code>0，代表普通的指针，存着class，meta-class对象的内存地址
-
-1，表示当前isa不是指针，使用位域来存储更多的信息，关于类的指针保存在shiftcls中
-</code></pre><p><strong>has_assoc</strong></p>
-<pre><code>是否有设置**过**关联对象,如果没有，释放时会更快
-</code></pre><p><strong>has_cxx_dtor</strong></p>
-<pre><code>是否有C++的析构函数，如果没有，释放时会更快
-</code></pre><p><strong>shiftcls</strong></p>
-<pre><code>存储着class，meta-class对象的内存地址信息
-</code></pre><p><strong>magic</strong></p>
-<pre><code>判断对象是否完成初始化
-</code></pre><p><strong>weakly_referenced</strong> </p>
-<pre><code>对象是否曾经被弱引用指向过，如果没有，释放更快
-</code></pre><p><strong>deallocating</strong></p>
-<pre><code>对象是否正在释放内存
-</code></pre><p><strong>has_sidetable_rc</strong></p>
-<pre><code>引用计数器是否过大，无法存储在isa中
-
-如果为1，那么引用计数会存储在一个sidetable的类的属性中
-</code></pre><p><strong>extra_rc</strong></p>
-<pre><code>存放引用计数器-1的结果
-</code></pre><p>这里我创建一个Test类</p>
+<p>0，代表普通的指针，存着class，meta-class对象的内存地址<br>1，表示当前isa不是指针，使用位域来存储更多的信息，关于类的指针保存在shiftcls中</p>
+<p><strong>has_assoc</strong></p>
+<p>是否有设置<strong>过</strong>关联对象,如果没有，释放时会更快</p>
+<p><strong>has_cxx_dtor</strong></p>
+<p>是否有C++的析构函数，如果没有，释放时会更快</p>
+<p><strong>shiftcls</strong></p>
+<p>存储着class，meta-class对象的内存地址信息</p>
+<p><strong>magic</strong></p>
+<p>判断对象是否完成初始化</p>
+<p><strong>weakly_referenced</strong> </p>
+<p>对象是否曾经被弱引用指向过，如果没有，释放更快</p>
+<p><strong>deallocating</strong></p>
+<p>对象是否正在释放内存</p>
+<p><strong>has_sidetable_rc</strong></p>
+<p>引用计数器是否过大，无法存储在isa中</p>
+<p>如果为1，那么引用计数会存储在一个sidetable的类的属性中</p>
+<p><strong>extra_rc</strong></p>
+<p>存放引用计数器-1的结果</p>
+<p>这里我创建一个Test类</p>
 <p><img src="/2018/07/19/runtime-Class/isa3.png"></p>
 <p>上图我们可以看出，isa的地址和<code>ISA_MASK</code>进行运算之后和class的地址完全相同，都为<code>0x00000001000fce20</code>,转换成2进制之后可以看到和下边的内容刚好对照。</p>
 <p>我们可以得到isa的地址为<code>0x000001a1000fce21</code> ,转化为2进制，结构如下</p>
