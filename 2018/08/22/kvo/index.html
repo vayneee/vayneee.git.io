@@ -85,10 +85,10 @@
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/kvo1.png">
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/kvo2.png">
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/kvo3.png">
-<meta property="og:image" content="http://yoursite.com/Users/yangyiqi/Desktop/mySpace/blog/source/_posts/kvo/kvo4.png">
+<meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/kvo4.png">
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/setter.png">
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/getter.png">
-<meta property="og:updated_time" content="2018-09-03T13:46:31.367Z">
+<meta property="og:updated_time" content="2018-09-03T13:49:09.491Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVO实现原理">
 <meta name="twitter:description" content="什么是KVO？KVO 的全称是Key-Value Observer，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。它的具体步骤如下： 1) 注册观察者 2) 更改主题对">
@@ -393,7 +393,7 @@
 <p>但是如果使用<code>[self.person1 class]</code>方法的话会发现person1是<code>Person</code>。使用<code>object_getClass()</code>获取到的类型是<code>NSKVONotifying_Person</code>. 所以calss方法不见得会返回正真的类型。应该是在<code>NSKVONotifying_Person</code>里重写了class的方法，屏蔽了底层的实现。</p>
 <p>我们可以通过以下方法来查看一下，动态生成的类中所包含的方法</p>
 <figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)printMethodsOfClass:(Class)cls &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"class ----- : %@"</span>,object_getClass(cls));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    Method *methodList = class_copyMethodList(cls, &amp;count);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">        Method method = methodList[i];</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"%@"</span>,<span class="built_in">NSStringFromSelector</span>(method_getName(method)));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    free(methodList);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	[<span class="keyword">self</span> printMethodsOfClass:object_getClass(<span class="keyword">self</span>.person1)];</span><br><span class="line">    [<span class="keyword">self</span> printMethodsOfClass:object_getClass(<span class="keyword">self</span>.person2)];</span><br></pre></td></tr></table></figure>
-<p><img src="/Users/yangyiqi/Desktop/mySpace/blog/source/_posts/kvo/kvo4.png"></p>
+<p><img src="/2018/08/22/kvo/kvo4.png"></p>
 <p>从结果来看，动态生成的类确实重写了class的方法。</p>
 <h4 id="手动触发KVO"><a href="#手动触发KVO" class="headerlink" title="手动触发KVO"></a>手动触发KVO</h4><p>由上边的内容我们可以明确知道，只有作用在setter方法时，KVO才会被触发。</p>
 <p>当KVO作用于NSMutableArray时，KVO肯定不会触发。如果我们手动调用这些方法依然可以做到监听的效果。</p>
