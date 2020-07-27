@@ -79,12 +79,12 @@
 
 
 
-<meta name="description" content="什么是KVO？KVO 的全称是Key-Value Observer，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。它的具体步骤如下： 1) 注册观察者 2) 更改主题对">
+<meta name="description" content="什么是KVO？KVO 的全称是Key-Value Observer，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。 它的具体步骤如下： 1) 注册观察者  2) 更改主">
 <meta property="og:type" content="article">
-<meta property="og:title" content="KVO实现原理">
+<meta property="og:title" content="KVO和KVC">
 <meta property="og:url" content="http://yoursite.com/2018/08/22/kvo/index.html">
 <meta property="og:site_name" content="vayneee">
-<meta property="og:description" content="什么是KVO？KVO 的全称是Key-Value Observer，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。它的具体步骤如下： 1) 注册观察者 2) 更改主题对">
+<meta property="og:description" content="什么是KVO？KVO 的全称是Key-Value Observer，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。 它的具体步骤如下： 1) 注册观察者  2) 更改主">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/kvo1.png">
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/kvo2.png">
@@ -92,10 +92,10 @@
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/kvo4.png">
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/setter.png">
 <meta property="og:image" content="http://yoursite.com/2018/08/22/kvo/getter.png">
-<meta property="og:updated_time" content="2018-09-03T13:49:09.490Z">
+<meta property="og:updated_time" content="2020-06-03T03:43:02.686Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KVO实现原理">
-<meta name="twitter:description" content="什么是KVO？KVO 的全称是Key-Value Observer，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。它的具体步骤如下： 1) 注册观察者 2) 更改主题对">
+<meta name="twitter:title" content="KVO和KVC">
+<meta name="twitter:description" content="什么是KVO？KVO 的全称是Key-Value Observer，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。 它的具体步骤如下： 1) 注册观察者  2) 更改主">
 <meta name="twitter:image" content="http://yoursite.com/2018/08/22/kvo/kvo1.png">
 
 
@@ -132,7 +132,7 @@
 
 
 
-  <title>KVO实现原理 | vayneee</title>
+  <title>KVO和KVC | vayneee</title>
   
 
 
@@ -266,7 +266,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">KVO实现原理</h1>
+          <h1 class="post-title" itemprop="name headline">KVO和KVC</h1>
         
 
         <div class="post-meta">
@@ -332,7 +332,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  919
+                  1,053
                 </span>
               
 
@@ -369,7 +369,11 @@
       
 
       
-        <h4 id="什么是KVO？"><a href="#什么是KVO？" class="headerlink" title="什么是KVO？"></a>什么是KVO？</h4><p>KVO 的全称是<code>Key-Value Observer</code>，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。它的具体步骤如下： 1) 注册观察者 2) 更改主题对象属性的值，即触发发送更改的通知。 3) 在制定的回调函数中，处理收到的更改通知。</p>
+        <h4 id="什么是KVO？"><a href="#什么是KVO？" class="headerlink" title="什么是KVO？"></a>什么是KVO？</h4><p>KVO 的全称是<code>Key-Value Observer</code>，即键值观察。是一种没有中心枢纽的观察者模式的实现方式。一个主体对象管理所有依赖于它的观察者对象，并且在自身状态发生改变的时候主动通知观察者对象。KVO 是一个纯 Objective-C 的概念，Swift 当前没有很好的动态机制。而且目前只有 NSObject 才支持 KVO。</p>
+<p>它的具体步骤如下：</p>
+<p>1) 注册观察者 </p>
+<p>2) 更改主题对象属性的值，即触发发送更改的通知。</p>
+<p>3) 在制定的回调函数中，处理收到的更改通知。</p>
 <h4 id="本质分析"><a href="#本质分析" class="headerlink" title="本质分析"></a>本质分析</h4><p>通过下列代码，当我们触摸屏幕时确实监听到了<code>person1</code> age的变化。</p>
 <p><img src="/2018/08/22/kvo/kvo1.png"></p>
 <p>非常神奇的是，<code>person1</code>和<code>person2</code>竟然指向不的类型不同。我们得出一个结论，当使用了KVO进行了键值观察后在Runtime期间会生成一个新的类型，被观察的对象会指向一个叫做<code>NSKVONotifying_xxx</code>的类型。</p>
@@ -384,18 +388,22 @@
 <li><code>didChangeValueForKey</code></li>
 <li><code>didChangeValueForKey</code> 内部会调用observe的<code>observeValueForKeyPath: ofObject: change: context:</code>方法</li>
 </ul>
-<p>但是如果使用<code>[self.person1 class]</code>方法的话会发现person1是<code>Person</code>。使用<code>object_getClass()</code>获取到的类型是<code>NSKVONotifying_Person</code>. 所以calss方法不见得会返回正真的类型。应该是在<code>NSKVONotifying_Person</code>里重写了class的方法，屏蔽了底层的实现。</p>
+<p>但是如果使用<code>[self.person1 class]</code>方法的话会发现person1是<code>Person</code>。使用<code>object_getClass()</code>获取到的类型是<code>NSKVONotifying_Person</code>. 所以calss方法不见得会返回正真的类型。应该是在<code>NSKVONotifying_Person</code>里重写了class的方法。</p>
 <p>我们可以通过以下方法来查看一下，动态生成的类中所包含的方法</p>
-<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)printMethodsOfClass:(Class)cls &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"class ----- : %@"</span>,object_getClass(cls));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    Method *methodList = class_copyMethodList(cls, &amp;count);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">        Method method = methodList[i];</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"%@"</span>,<span class="built_in">NSStringFromSelector</span>(method_getName(method)));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    free(methodList);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	[<span class="keyword">self</span> printMethodsOfClass:object_getClass(<span class="keyword">self</span>.person1)];</span><br><span class="line">    [<span class="keyword">self</span> printMethodsOfClass:object_getClass(<span class="keyword">self</span>.person2)];</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)printMethodsOfClass:(Class)cls &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"class ----- : %@"</span>,object_getClass(cls));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    Method *methodList = class_copyMethodList(cls, &amp;count);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">        Method method = methodList[i];</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"%@"</span>,<span class="built_in">NSStringFromSelector</span>(method_getName(method)));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    free(methodList);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[<span class="keyword">self</span> printMethodsOfClass:object_getClass(<span class="keyword">self</span>.person1)];</span><br><span class="line">[<span class="keyword">self</span> printMethodsOfClass:object_getClass(<span class="keyword">self</span>.person2)];</span><br></pre></td></tr></table></figure>
 <p><img src="/2018/08/22/kvo/kvo4.png"></p>
-<p>从结果来看，动态生成的类确实重写了class的方法。</p>
-<h4 id="手动触发KVO"><a href="#手动触发KVO" class="headerlink" title="手动触发KVO"></a>手动触发KVO</h4><p>由上边的内容我们可以明确知道，只有作用在setter方法时，KVO才会被触发。</p>
+<p>从结果来看，动态生成的类确实重写了class方法。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>利用runtime动态生成一个被观察对象的子类，并且让isa指向这个全新的子类，并且重写setter方法，当修改instance对象的属性时，会调用Foundation的_NSSetxxxValueAndNotify函数，首先调用<code>willChangeValueForKey</code> 之后调用父类的setter方法，然后调用<code>didChangeValueForKey:</code>，在该方法内部触发监听器的监听方法<code>observeValueForKeyPath: ofObject: change: context:</code></p>
+<h4 id="直接修改成员变量会触发KVO吗？"><a href="#直接修改成员变量会触发KVO吗？" class="headerlink" title="直接修改成员变量会触发KVO吗？"></a>直接修改成员变量会触发KVO吗？</h4><p>答案是NO，不会触发KVO</p>
+<h4 id="手动触发KVO"><a href="#手动触发KVO" class="headerlink" title="手动触发KVO"></a>手动触发KVO</h4><p>由上边的内容我们可以明确知道，KVO的监听触发在setter方法里，所以只有在作用在setter方法KVO才会被触发。</p>
 <p>当KVO作用于NSMutableArray时，KVO肯定不会触发。如果我们手动调用这些方法依然可以做到监听的效果。</p>
-<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//添加观察事件</span></span><br><span class="line">[person addObserver:<span class="keyword">self</span> forKeyPath:<span class="string">@"dogs"</span> options:<span class="built_in">NSKeyValueObservingOptionOld</span>|<span class="built_in">NSKeyValueObservingOptionNew</span> context:<span class="literal">nil</span>];</span><br><span class="line"><span class="comment">//需要手动调用</span></span><br><span class="line">[person willChangeValueForKey:<span class="string">@"dogs"</span>];</span><br><span class="line"></span><br><span class="line">[person.dogs addObject:dog];</span><br><span class="line"><span class="comment">//需要手动调用</span></span><br><span class="line">[person didChangeValueForKey:<span class="string">@"dogs"</span>];</span><br></pre></td></tr></table></figure>
-<p>如果使用KVC来给age赋值的话，是否会触发KVO。答案是YES。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">//添加观察事件</span></span><br><span class="line">  [person addObserver:<span class="keyword">self</span> forKeyPath:<span class="string">@"dogs"</span> options:<span class="built_in">NSKeyValueObservingOptionOld</span>|<span class="built_in">NSKeyValueObservingOptionNew</span> context:<span class="literal">nil</span>];</span><br><span class="line">  <span class="comment">//需要手动调用</span></span><br><span class="line">  [person willChangeValueForKey:<span class="string">@"dogs"</span>];</span><br><span class="line"><span class="comment">//add方法并不触发setter，只有是person.dags被赋值时才会触发</span></span><br><span class="line">  [person.dogs addObject:dog];</span><br><span class="line">  <span class="comment">//需要手动调用</span></span><br><span class="line">  [person didChangeValueForKey:<span class="string">@"dogs"</span>];</span><br></pre></td></tr></table></figure>
+<p>####什么是KVC</p>
+<p>####如果使用KVC来给age赋值的话，是否会触发KVO？</p>
+<p>会触发KVO</p>
 <h4 id="KVC的原理"><a href="#KVC的原理" class="headerlink" title="KVC的原理"></a>KVC的原理</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">Person</span> : <span class="title">NSObject</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> age;</span><br><span class="line">    <span class="keyword">int</span> _age;</span><br><span class="line">    <span class="keyword">int</span> isAge;</span><br><span class="line">    <span class="keyword">int</span> _isAge;  </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#import <span class="meta-string">"Person.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">Person</span></span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">//- (void)_setAge:(NSInteger)age &#123;</span></span><br><span class="line"><span class="comment">//    NSLog(@"_setAge:");</span></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line"><span class="comment">//- (void)setAge:(NSInteger)age &#123;</span></span><br><span class="line"><span class="comment">//    NSLog(@"setAge:");</span></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//+ (BOOL)accessInstanceVariablesDirectly &#123;</span></span><br><span class="line">  <span class="comment">//  return YES;</span></span><br><span class="line"><span class="comment">//&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
-<p>由于property会自动生成setter方法。所以我实验了一下成员变量。如果写了setter方法，会优先调用setAge:</p>
-<p>如果setAge:不存在择会调用_setAge:。就算两个方法都不写。还是能成功触发KVO。成员变量的查找顺序为  _age, _isAge, age, isAge。</p>
+<p>所以我实验了一下成员变量。如果写了setter方法，会优先调用setAge:</p>
+<p>如果setAge:不存在择会调用_setAge:就算两个方法都不写。还是能成功触发KVO。成员变量的查找顺序为  _age, _isAge, age, isAge。</p>
 <p><code>setValue:forKey:</code>的调用流程</p>
 <p><img src="/2018/08/22/kvo/setter.png"></p>
 <p><code>valueForKey</code>调用流程</p>
@@ -528,7 +536,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -574,7 +582,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是KVO？"><span class="nav-number">1.</span> <span class="nav-text">什么是KVO？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#本质分析"><span class="nav-number">2.</span> <span class="nav-text">本质分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#本质验证"><span class="nav-number">3.</span> <span class="nav-text">本质验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内部调用流程"><span class="nav-number">4.</span> <span class="nav-text">内部调用流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#手动触发KVO"><span class="nav-number">5.</span> <span class="nav-text">手动触发KVO</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#KVC的原理"><span class="nav-number">6.</span> <span class="nav-text">KVC的原理</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是KVO？"><span class="nav-number">1.</span> <span class="nav-text">什么是KVO？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#本质分析"><span class="nav-number">2.</span> <span class="nav-text">本质分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#本质验证"><span class="nav-number">3.</span> <span class="nav-text">本质验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内部调用流程"><span class="nav-number">4.</span> <span class="nav-text">内部调用流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#直接修改成员变量会触发KVO吗？"><span class="nav-number">6.</span> <span class="nav-text">直接修改成员变量会触发KVO吗？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#手动触发KVO"><span class="nav-number">7.</span> <span class="nav-text">手动触发KVO</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#KVC的原理"><span class="nav-number">8.</span> <span class="nav-text">KVC的原理</span></a></li></ol></div>
             
 
           </div>
@@ -608,7 +616,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">9.8k</span>
+    <span title="Site words total count">10.1k</span>
   
 </div>
 
